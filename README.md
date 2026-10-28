@@ -21,11 +21,36 @@ The platform includes 3 pre-seeded role accounts for immediate testing:
 | **City Moderator** | `moderator@nirapod.local` | `Mod@123456` | Moderation desk (`/moderation`), queue review, hazard confirmation, status resolution |
 | **Verified Commuter** | `user@nirapod.local` | `User@123456` | Hazard reporting, verification, personal dashboard (`/dashboard`) |
 
-> You can also click the **"Quick Test Accounts"** buttons on the [Login Page](http://localhost:3000/auth/login) to autofill credentials with a single click.
+---
+
+## 2. Civic Gamification & Reputation Engine
+
+NirapodElaka features a constructive, safety-first gamification model designed to incentivize accurate contributions:
+
+- **Progression Tiers:**
+  - **Level 1 — Neighborhood Neighbor (পাড়া প্রতিবেশী):** 0–49 pts
+  - **Level 2 — Dhaka Scout (ঢাকা স্কাউট):** 50–149 pts
+  - **Level 3 — Civic Guardian (নাগরিক অভিভাবক):** 150–349 pts
+  - **Level 4 — City Sentinel (নগর প্রহরী):** 350–699 pts
+  - **Level 5 — Urban Champion (শহর রক্ষক):** 700+ pts
+
+- **Points System:**
+  - `+25 pts`: Submitting a verified hazard report
+  - `+10 pts`: Bonus for attaching photo evidence
+  - `+10 pts`: On-the-ground hazard confirmation
+  - `+15 pts`: Submitting a condition or resolution update
+
+- **Civic Badges:**
+  - 🌱 **First Alert (প্রথম সঙ্কেত):** First verified hazard report
+  - 💧 **Flood Scout (জলপ্রহরী):** Reporting or verifying monsoon waterlogging
+  - 🚧 **Route Guardian (পথের দিশারী):** Reporting blocked streets, fallen trees, or traffic jams
+  - 🔍 **Truth Sentinel (সত্যায়ন প্রহরী):** 3+ confirmations keeping reports accurate
+  - ⚡ **Live Reporter (তাজা খবর):** On-the-ground condition updates
+  - 🏆 **Dhaka Hero (ঢাকা হিরো):** Reaching 150+ civic points protecting neighbors
 
 ---
 
-## 2. Security & Authentication Architecture
+## 3. Security & Authentication Architecture
 
 1. **Cryptographic Password Hashing:**
    - Powered by **PBKDF2** using `SHA-512` over **100,000 iterations** with a unique 16-byte cryptographic salt per citizen.
@@ -54,7 +79,7 @@ The platform includes 3 pre-seeded role accounts for immediate testing:
 
 ---
 
-## 3. Dedicated Admin Dashboard (`/admin`)
+## 4. Dedicated Admin Dashboard (`/admin`)
 
 The protected **Admin Desk** provides:
 
@@ -70,41 +95,44 @@ The protected **Admin Desk** provides:
   - Real-time submission and verification statistics per citizen.
 
 - **Security & Administrative Audit Trail Tab:**
-  - Immutable record of every administrative action (admin ID, target user, action timestamp, and rationale).
+  - Immutable record of every administrative action with action filtering and search.
 
 - **System Policies Tab:**
   - Direct overview of rate limits, salted IP policies, and encryption standards.
 
 ---
 
-## 4. Key Application Features
+## 5. Key Application Features
 
 1. **Interactive Community Map (`/`):**
    - High-contrast OpenStreetMap integration using Leaflet with custom SVG/DivIcon markers for all 9 hazard categories.
    - Quick-jump neighborhood chips for Dhaka (*Dhanmondi*, *Mirpur*, *Gulshan*, *Uttara*, *Farmgate*, *Malibagh*, *Old Dhaka*).
 
 2. **Citizen Hazard Reporting (`/report/new`):**
-   - Single-click interactive map pin dropping + browser GPS locator.
+   - Requires citizen authentication to prevent spam and build trust.
+   - Single-click interactive map pin dropping + browser GPS locator with timeout fallback.
+   - Automatic OpenStreetMap Nominatim reverse geocoding on pin drop.
    - **Live duplicate hazard warning:** alerts when an existing disruption exists within 1 km.
-   - Photo upload with format/size validation (≤ 5 MB) and warnings against photographing recognizable faces or ID documents.
+   - Client-side canvas compression and magic-byte image validation.
 
 3. **Report Details & Verification (`/report/[id]`):**
    - Relative + absolute Bangladesh Standard Time (BST).
    - "May be outdated" banner for unconfirmed hazards (>24 hours).
    - Ground actions: *"Still happening"* (Confirm), *"Resolved"*, and *"Information is incorrect"* (Dispute).
-   - Structured updates thread.
+   - Structured updates thread with live points rewards.
 
 4. **Civic Moderation Desk (`/moderation`):**
-   - Queue management for community moderators to approve, dispute, resolve, or archive reports with audit reason logs.
+   - Multi-select bulk actions (Bulk Approve, Resolve, Archive).
+   - Interactive abuse report triage (Dismiss, Takedown).
 
 ---
 
-## 5. Running the Application & Tests
+## 6. Running the Application & Tests
 
 ```bash
 cd /Users/rashed/Projects/nirapod-elaka
 
-# Run test suite (19 unit & integration tests)
+# Run test suite (25 unit & integration tests)
 npm test
 
 # Run Next.js production build

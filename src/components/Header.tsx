@@ -77,10 +77,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
       {/* Critical Public Safety Disclaimer Bar */}
-      <div className="bg-amber-500 text-amber-950 px-3 py-1.5 text-xs sm:text-sm font-medium flex items-center justify-between shadow-inner">
-        <div className="flex items-center gap-1.5 max-w-7xl mx-auto w-full">
+      <div className="bg-amber-500 text-amber-950 px-3 py-1.5 text-xs sm:text-sm font-medium shadow-inner">
+        <div className="flex items-center justify-center text-center gap-1.5 max-w-7xl mx-auto w-full">
           <AlertTriangle className="w-4 h-4 shrink-0 text-amber-950" aria-hidden="true" />
-          <span>
+          <span className="text-center">
             {locale === "bn"
               ? "জরুরি পরিস্থিতির জন্য ৯৯৯ কল করুন। নিরাপদ এলাকা একটি কমিউনিটি প্ল্যাটফর্ম, কোনো সরকারি জরুরি সেবা নয়।"
               : "Call 999 for emergencies. NirapodElaka is a community platform, not an official emergency service."}

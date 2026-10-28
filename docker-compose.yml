@@ -1,6 +1,22 @@
 version: "3.9"
 
 services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nirapod_web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://nirapod:password@postgres:5432/nirapod_elaka
+      JWT_SECRET: production-grade-secret-must-be-at-least-32-chars-long
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgis/postgis:16-3.4
     container_name: nirapod_postgres

@@ -13,6 +13,7 @@ import {
   Users,
   Compass,
   FileCheck,
+  Sparkles,
 } from "lucide-react";
 
 export default function AboutPage() {
@@ -66,8 +67,8 @@ export default function AboutPage() {
             <h3 className="font-bold text-gray-900 text-sm">{locale === "bn" ? "রিপোর্ট করুন" : "Report"}</h3>
             <p className="leading-relaxed">
               {locale === "bn"
-                ? "রাস্তায় জলাবদ্ধতা, ভাঙা রাস্তা বা যানজট দেখলে মানচিত্রে পিন ফেলে বিবরণ দিন। কোনো রেজিস্ট্রেশন বাধ্যতামূলক নয়।"
-                : "Spot flooding, blocked routes, or broken roads? Drop a pin on the map and share a concise description."}
+                ? "রাস্তায় জলাবদ্ধতা, ভাঙা রাস্তা বা যানজট দেখলে সাইন ইন করে মানচিত্রে পিন ফেলে বিবরণ দিন এবং নাগরিক পয়েন্ট অর্জন করুন।"
+                : "Spot flooding, blocked routes, or broken roads? Sign in, drop a pin on the map, and earn civic reputation points."}
             </p>
           </div>
           <div className="space-y-2">
@@ -134,6 +135,36 @@ export default function AboutPage() {
             <p>{locale === "bn" ? "মানুষের মুখমণ্ডল বা ব্যক্তিগত পরিচয় প্রদর্শনকারী ছবি কঠোরভাবে নিষিদ্ধ ও ফিল্টার করা হয়।" : "Photos showing faces or identity documents are flagged and removed."}</p>
           </div>
         </div>
+      </section>
+
+      {/* Civic Gamification Section */}
+      <section id="gamification" className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 shadow-xs space-y-4">
+        <div className="flex items-center gap-2.5 text-teal-700">
+          <Sparkles className="w-6 h-6 text-amber-600" />
+          <h2 className="font-black text-xl text-gray-900">
+            {locale === "bn" ? "নাগরিক সম্মাননা ও পয়েন্ট সিস্টেম" : "Civic Reputation & Points System"}
+          </h2>
+        </div>
+        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+          {locale === "bn"
+            ? "সঠিক ও দায়িত্বশীল তথ্য প্রদানে নাগরিকদের উৎসাহিত করতে নিরাপদ এলাকায় একটি নাগরিক স্কোর ব্যবস্থা রয়েছে। যেকোনো যাচাইকৃত রিপোর্ট জমা দিলে ২৫ পয়েন্ট, ছবি যুক্ত করলে ১০ পয়েন্ট এবং সহনাগরিকদের রিপোর্ট নিশ্চিত করলে ১০ পয়েন্ট অর্জিত হয়।"
+            : "To encourage reliable contributions, NirapodElaka rewards verified alerts with Civic Reputation Points. Earn +25 points for submitting a verified hazard, +10 for photos, and +10 for on-the-ground confirmations."}
+        </p>
+      </section>
+
+      {/* Contact Moderation */}
+      <section id="contact" className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 shadow-xs space-y-3">
+        <div className="flex items-center gap-2.5 text-teal-700">
+          <PhoneCall className="w-6 h-6" />
+          <h2 className="font-black text-xl text-gray-900">
+            {locale === "bn" ? "মডারেশন টিমের সাথে যোগাযোগ" : "Contact the Moderation Team"}
+          </h2>
+        </div>
+        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+          {locale === "bn"
+            ? "কোনো অনুপযুক্ত কন্টেন্ট, ভুল চিহ্নিত রিপোর্ট বা অ্যাকাউন্টের সমস্যা সম্পর্কে জানাতে সরাসরি আমাদের ভলান্টিয়ার মডারেশন ডেস্কে লিখুন: support@nirapod.local অথবা প্রতিটি রিপোর্টের নিচের 'রিপোর্ট ফ্ল্যাগ' অপশনটি ব্যবহার করুন।"
+            : "For moderation questions, incorrect flags, or account inquiries, contact our community moderation desk at support@nirapod.local or use the Report Abuse button on any hazard detail view."}
+        </p>
       </section>
     </div>
   );

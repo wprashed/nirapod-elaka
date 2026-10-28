@@ -302,12 +302,17 @@ class NirapodDataStore {
     status?: ReportStatus;
     sort?: "newest" | "nearest" | "recently_confirmed" | "unresolved";
     search?: string;
+    reporterId?: string;
     page?: number;
     limit?: number;
   }) {
-    const { lat, lng, radiusKm = 15, category, status, sort = "newest", search, page = 1, limit = 20 } = query;
+    const { lat, lng, radiusKm = 15, category, status, sort = "newest", search, reporterId, page = 1, limit = 20 } = query;
 
     let items = this.reports.filter((r) => r.status !== "archived");
+
+    if (reporterId) {
+      items = items.filter((r) => r.reporterId === reporterId);
+    }
 
     if (category) {
       items = items.filter((r) => r.category === category);

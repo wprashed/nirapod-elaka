@@ -208,9 +208,15 @@ export function Header() {
         <div className="lg:hidden border-t border-gray-200 bg-white px-4 pt-3 pb-5 space-y-2 shadow-lg">
           {user && (
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between mb-2">
-              <div>
+              <div className="space-y-0.5">
                 <span className="font-bold text-sm text-gray-900 block">{user.name}</span>
-                <span className="text-xs text-gray-500">{user.email} · <strong className="uppercase text-teal-700">{user.role}</strong></span>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="inline-flex items-center gap-1 font-bold text-amber-900 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded text-[10px]">
+                    ⭐ {user.civicPoints ?? 0} pts
+                  </span>
+                  <span>·</span>
+                  <strong className="uppercase text-teal-700 text-[10px]">{user.role}</strong>
+                </div>
               </div>
               <button
                 type="button"

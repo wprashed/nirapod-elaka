@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { MessageSquarePlus, X, AlertCircle } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { MessageSquarePlus, X, AlertCircle, Sparkles } from "lucide-react";
 
 interface UpdateModalProps {
   reportId: string;
@@ -20,6 +21,7 @@ export function UpdateModal({
   onSuccess,
 }: UpdateModalProps) {
   const { locale } = useI18n();
+  const { user, refreshUser } = useAuth();
   const [updateType, setUpdateType] = useState<
     "general" | "status_update" | "severity_change" | "partial_resolution" | "resolution"
   >("general");
@@ -53,6 +55,10 @@ export function UpdateModal({
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Failed to submit update");
+      }
+
+      if (user) {
+        refreshUser();
       }
 
       onSuccess(data.update);
@@ -136,6 +142,19 @@ export function UpdateModal({
               {description.length} / 500
             </div>
           </div>
+
+          {/* Points incentive notice */}
+          {user && (
+            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-center justify-between shadow-2xs">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                {locale === "bn" ? "আপডেট প্রদান করলে অর্জিত হবে:" : "Points earned for update:"}
+              </span>
+              <span className="font-bold text-amber-800 bg-white px-2 py-0.5 rounded-md border border-amber-200">
+                +১৫ pts
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
             <button

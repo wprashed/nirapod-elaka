@@ -150,9 +150,14 @@ export default function ReportDetailPage() {
       <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7 shadow-xs space-y-6">
         {/* Meta badges */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <CategoryBadge category={report.category} />
             <StatusBadge status={report.status} />
+            {report.reporterId && (
+              <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">
+                👤 {locale === "bn" ? "যাচাইকৃত নাগরিক" : "Verified Citizen"}
+              </span>
+            )}
           </div>
 
           <div className="text-[11px] text-gray-400 font-mono">

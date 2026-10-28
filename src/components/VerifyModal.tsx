@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { CheckCircle2, AlertCircle, CheckCheck, X, ThumbsUp } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { CheckCircle2, AlertCircle, CheckCheck, X, ThumbsUp, Sparkles } from "lucide-react";
 
 interface VerifyModalProps {
   reportId: string;
@@ -20,6 +21,7 @@ export function VerifyModal({
   onSuccess,
 }: VerifyModalProps) {
   const { locale, t } = useI18n();
+  const { user, refreshUser } = useAuth();
   const [selectedAction, setSelectedAction] = useState<"confirm" | "dispute" | "resolved">("confirm");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +46,10 @@ export function VerifyModal({
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Failed to submit verification");
+      }
+
+      if (user) {
+        refreshUser();
       }
 
       onSuccess(data.report);
@@ -163,6 +169,19 @@ export function VerifyModal({
               </p>
             </div>
           </label>
+
+          {/* Points incentive notice */}
+          {user && (
+            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-center justify-between shadow-2xs">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                {locale === "bn" ? "ভেরিফিকেশন সম্পন্ন করলে অর্জিত হবে:" : "Points earned for verification:"}
+              </span>
+              <span className="font-bold text-amber-800 bg-white px-2 py-0.5 rounded-md border border-amber-200">
+                +১০ pts
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
             <button

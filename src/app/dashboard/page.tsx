@@ -31,14 +31,18 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/v1/reports?limit=10")
+    const url = user?.id
+      ? `/api/v1/reports?reporterId=${encodeURIComponent(user.id)}&limit=10`
+      : "/api/v1/reports?limit=10";
+
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         setReports(data.reports || []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [user?.id]);
 
   const pendingReports = reports.filter((r) => r.status === "submitted" || r.status === "under_review");
   const confirmedReports = reports.filter((r) => r.status === "community_confirmed");
@@ -303,9 +307,32 @@ export default function DashboardPage() {
               <div key={i} className="h-44 bg-white rounded-3xl border border-gray-200 animate-pulse p-4" />
             ))}
           </div>
+        ) : reports.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-8 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mx-auto text-xl shadow-2xs">
+              🌱
+            </div>
+            <div className="space-y-1">
+              <span className="font-bold text-gray-900 block text-sm">
+                {locale === "bn" ? "এখনও কোনো রিপোর্ট জমা দেননি" : "No Reports Submitted Yet"}
+              </span>
+              <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                {locale === "bn"
+                  ? "আপনার এলাকার জলাবদ্ধতা বা রাস্তার কোনো সমস্যা থাকলে রিপোর্ট করুন এবং ২৫টি নাগরিক পয়েন্ট অর্জন করুন।"
+                  : "Report local flooding or road disruptions to help commuters navigate safely and earn +25 civic points."}
+              </p>
+            </div>
+            <Link
+              href="/report/new"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>{locale === "bn" ? "প্রথম রিপোর্ট করুন" : "Submit First Report"}</span>
+            </Link>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {reports.slice(0, 4).map((r) => (
+            {reports.map((r) => (
               <ReportCard key={r.id} report={r} />
             ))}
           </div>

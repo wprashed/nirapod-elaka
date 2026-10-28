@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
 
   const { lat, lng, radiusKm, category, status, sort, page, limit } = queryResult.data;
   const search = searchParams.get("search") || undefined;
+  const reporterId = searchParams.get("reporterId") || undefined;
 
   try {
     const result = dataStore.getReports({
@@ -30,6 +31,7 @@ export async function GET(request: NextRequest) {
       status,
       sort,
       search,
+      reporterId,
       page,
       limit,
     });

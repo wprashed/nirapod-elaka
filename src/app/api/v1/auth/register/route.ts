@@ -84,6 +84,11 @@ export async function POST(request: NextRequest) {
           email: user.email,
           role: user.role,
           status: user.status,
+          civicPoints: user.civicPoints ?? 0,
+          badges: user.badges ?? [],
+          reportsSubmitted: user.reportsSubmitted ?? 0,
+          verificationsCount: user.verificationsCount ?? 0,
+          streakDays: user.streakDays ?? 1,
         },
       },
       { status: 201 }

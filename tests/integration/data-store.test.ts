@@ -2,10 +2,9 @@ import { describe, it, expect } from "vitest";
 import { dataStore } from "@/lib/data-store";
 
 describe("Nirapod Data Store & Lifecycle Engine", () => {
-  it("initializes with realistic Dhaka demonstration reports", () => {
+  it("initializes clean with empty reports list", () => {
     const res = dataStore.getReports({ limit: 10 });
-    expect(res.reports.length).toBeGreaterThanOrEqual(5);
-    expect(res.reports[0].isDemo).toBe(true);
+    expect(res.reports.length).toBe(0);
   });
 
   it("creates a new hazard report and retrieves it by ID", () => {
@@ -28,7 +27,14 @@ describe("Nirapod Data Store & Lifecycle Engine", () => {
   });
 
   it("detects geographic and textual duplicate candidates", () => {
-    // We already have "Waterlogging on Mirpur Road near Dhanmondi 27" at 23.7533, 90.3768
+    dataStore.createReport({
+      title: "Waterlogging on Mirpur Road near Dhanmondi 27",
+      description: "Knee-deep water accumulation after morning rainfall.",
+      category: "waterlogging",
+      latitude: 23.7533,
+      longitude: 90.3768,
+    });
+
     const duplicates = dataStore.findDuplicateCandidates({
       latitude: 23.7534,
       longitude: 90.3769,

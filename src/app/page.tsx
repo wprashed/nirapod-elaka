@@ -82,7 +82,7 @@ export default function HomePage() {
               {locale === "bn" ? "নাগরিক তথ্য" : "Civic Platform"}
             </span>
             <span className="text-xs font-semibold text-gray-500">
-              {locale === "bn" ? "প্রদর্শনী ও পাইলট সংস্করণ" : "Pilot Demonstration (Dhaka)"}
+              {locale === "bn" ? "ঢাকা লাইভ নাগরিক নেটওয়ার্ক" : "Dhaka Live Civic Network"}
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">

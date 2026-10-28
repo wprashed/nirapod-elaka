@@ -29,18 +29,12 @@ export function ReportCard({ report, className = "" }: ReportCardProps) {
       } ${className}`}
     >
       <div>
-        {/* Top meta row: Category + Status + Demo pill */}
+        {/* Top meta row: Category + Status */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <CategoryBadge category={report.category} />
             <StatusBadge status={report.status} />
           </div>
-
-          {report.isDemo && (
-            <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-              {locale === "bn" ? "ডেমো ডেটা" : "Demo Data"}
-            </span>
-          )}
         </div>
 
         {/* Title */}

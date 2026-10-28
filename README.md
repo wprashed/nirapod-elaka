@@ -2,6 +2,9 @@
 
 **A Mobile-First Community Hazard & Disruption Reporting Platform for Bangladesh**
 
+[![CI](https://github.com/wprashed/nirapod-elaka/actions/workflows/ci.yml/badge.svg)](https://github.com/wprashed/nirapod-elaka/actions)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwprashed%2Fnirapod-elaka)
+
 NirapodElaka is an open, civic-tech web application that empowers residents across Bangladesh—starting with Dhaka neighborhoods—to report, discover, and verify localized hazards and disruptions in real time.
 
 > **Important Public Notice:** NirapodElaka is an independent civic utility tool. It is **not** an official government agency, civil defense unit, or emergency dispatch service. For life-threatening emergencies, medical distress, fire, or police assistance in Bangladesh, immediately call **999** (National Emergency Helpline).

@@ -140,6 +140,14 @@ export function Header() {
               <div className="hidden sm:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-1 pl-2.5">
                 <div className="flex items-center gap-1.5 text-xs">
                   <span className="font-bold text-gray-800 truncate max-w-[110px]">{user.name}</span>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition"
+                    title={locale === "bn" ? "আপনার নাগরিক স্কোর" : "Your Civic Reputation"}
+                  >
+                    <span>⭐</span>
+                    <span>{user.civicPoints ?? 0}</span>
+                  </Link>
                   <span
                     className={`px-1.5 py-0.2 rounded-md text-[10px] font-bold uppercase ${
                       user.role === "admin"

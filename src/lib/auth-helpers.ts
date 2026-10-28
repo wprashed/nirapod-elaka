@@ -7,6 +7,11 @@ export type SessionUser = {
   status: "active" | "suspended";
   name: string;
   email: string;
+  civicPoints?: number;
+  badges?: string[];
+  reportsSubmitted?: number;
+  verificationsCount?: number;
+  streakDays?: number;
 };
 
 /**

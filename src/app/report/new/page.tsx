@@ -8,6 +8,7 @@ import { ReportCategory } from "@/lib/types";
 import { REPORT_CATEGORIES } from "@/lib/validation";
 import { CATEGORY_META } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import {
   MapPin,
   Camera,
@@ -20,6 +21,8 @@ import {
   FileText,
   ShieldCheck,
   Compass,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 
 const MapView = dynamic(
@@ -36,6 +39,7 @@ const MapView = dynamic(
 
 export default function NewReportPage() {
   const { locale, t } = useI18n();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // Form State
@@ -257,6 +261,12 @@ export default function NewReportPage() {
             {t("report.successTitle", "রিপোর্ট জমা হয়েছে!")}
           </h1>
 
+          {/* Gamification reward pill */}
+          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+            <span>{locale === "bn" ? "+২৫ নাগরিক পয়েন্ট (Civic Points) যোগ হয়েছে!" : "+25 Civic Points earned!"}</span>
+          </div>
+
           <p className="text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
             {t(
               "report.successMessage",
@@ -302,6 +312,42 @@ export default function NewReportPage() {
     );
   }
 
+  // Must be logged in to report a hazard
+  if (!authLoading && !user) {
+    return (
+      <div className="max-w-md mx-auto py-12 px-4 text-center space-y-6">
+        <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+          <Lock className="w-8 h-8 text-amber-700" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-black text-gray-900">
+            {locale === "bn" ? "রিপোর্ট করতে সাইন ইন আবশ্যক" : "Sign In Required to Report"}
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+            {locale === "bn"
+              ? "নাগরিক তথ্যের নিরাপত্তা ও নির্ভরযোগ্যতা নিশ্চিত করতে হ্যাজার্ড রিপোর্ট পোস্ট করতে অ্যাকাউন্টে লগইন থাকা প্রয়োজন। প্রতিটি সঠিক রিপোর্টের মাধ্যমে আপনি নাগরিক পয়েন্ট ও ব্যাজ অর্জন করবেন।"
+              : "To maintain community safety and prevent misinformation, reporting a hazard requires an account. Earn civic reputation points and badges for keeping neighbors informed."}
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <Link
+            href="/auth/login?redirect=/report/new"
+            className="w-full sm:w-auto px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition flex items-center justify-center gap-2"
+          >
+            <span>{locale === "bn" ? "সাইন ইন করুন" : "Sign In"}</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/auth/register?redirect=/report/new"
+            className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center"
+          >
+            <span>{locale === "bn" ? "নতুন অ্যাকাউন্ট তৈরি করুন" : "Create Account"}</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
@@ -311,9 +357,24 @@ export default function NewReportPage() {
         </h1>
         <p className="text-xs sm:text-sm text-gray-600 mt-1">
           {locale === "bn"
-            ? "আপনার এলাকার জলাবদ্ধতা, ভাঙা রাস্তা বা বিপজ্জনক পরিস্থিতি জানিয়ে সহনাগরিকদের সতর্ক করুন। কোনো অ্যাকাউন্ট বা রেজিস্ট্রেশনের প্রয়োজন নেই।"
-            : "Report flooding, damaged streets, or local disruptions. Free and privacy-conscious; no registration required."}
+            ? "আপনার এলাকার জলাবদ্ধতা, ভাঙা রাস্তা বা বিপজ্জনক পরিস্থিতি জানিয়ে সহনাগরিকদের সতর্ক করুন এবং নাগরিক পয়েন্ট অর্জন করুন।"
+            : "Report flooding, damaged streets, or local disruptions to keep neighbors safe and earn civic points."}
         </p>
+      </div>
+
+      {/* Gamification perk banner */}
+      <div className="p-3.5 bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 border border-teal-200 rounded-2xl flex items-center justify-between text-xs text-teal-900 shadow-2xs">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-teal-700 shrink-0" />
+          <span>
+            {locale === "bn"
+              ? "এই রিপোর্টটি জমা দিলে আপনি ২৫টি নাগরিক পয়েন্ট (Civic Points) অর্জন করবেন!"
+              : "Submitting this verified hazard earns you +25 Civic Reputation Points!"}
+          </span>
+        </div>
+        <span className="font-bold text-teal-700 bg-white px-2.5 py-1 rounded-lg border border-teal-200 shadow-2xs shrink-0">
+          +25 pts
+        </span>
       </div>
 
       {error && (

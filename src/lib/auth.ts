@@ -9,6 +9,11 @@ export interface UserSession {
     status: "active" | "suspended";
     name: string;
     email: string;
+    civicPoints?: number;
+    badges?: string[];
+    reportsSubmitted?: number;
+    verificationsCount?: number;
+    streakDays?: number;
   };
 }
 
@@ -43,6 +48,11 @@ export async function auth(): Promise<UserSession | null> {
         status: liveUser.status,
         name: liveUser.name,
         email: liveUser.email,
+        civicPoints: liveUser.civicPoints || 0,
+        badges: liveUser.badges || [],
+        reportsSubmitted: liveUser.reportsSubmitted || 0,
+        verificationsCount: liveUser.verificationsCount || 0,
+        streakDays: liveUser.streakDays || 1,
       },
     };
   } catch {

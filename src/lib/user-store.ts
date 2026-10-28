@@ -12,6 +12,9 @@ export interface AppUser {
   tokenVersion: number; // Item 2: Incremented on password change or suspension
   reportsSubmitted: number;
   verificationsCount: number;
+  civicPoints: number; // Gamification civic score
+  badges: string[];
+  streakDays: number;
   createdAt: string;
   updatedAt: string;
   suspendedReason?: string;
@@ -47,6 +50,9 @@ const INITIAL_USERS: AppUser[] = [
     tokenVersion: 1,
     reportsSubmitted: 3,
     verificationsCount: 15,
+    civicPoints: 320,
+    badges: ["first_alert", "flood_scout", "route_guardian", "truth_sentinel", "dhaka_hero"],
+    streakDays: 8,
     createdAt: new Date(Date.now() - 30 * 24 * 3600000).toISOString(),
     updatedAt: new Date(Date.now() - 30 * 24 * 3600000).toISOString(),
   },
@@ -61,6 +67,9 @@ const INITIAL_USERS: AppUser[] = [
     tokenVersion: 1,
     reportsSubmitted: 5,
     verificationsCount: 38,
+    civicPoints: 195,
+    badges: ["first_alert", "flood_scout", "truth_sentinel", "live_reporter", "dhaka_hero"],
+    streakDays: 5,
     createdAt: new Date(Date.now() - 20 * 24 * 3600000).toISOString(),
     updatedAt: new Date(Date.now() - 20 * 24 * 3600000).toISOString(),
   },
@@ -75,6 +84,9 @@ const INITIAL_USERS: AppUser[] = [
     tokenVersion: 1,
     reportsSubmitted: 2,
     verificationsCount: 6,
+    civicPoints: 85,
+    badges: ["first_alert", "flood_scout", "truth_sentinel"],
+    streakDays: 3,
     createdAt: new Date(Date.now() - 10 * 24 * 3600000).toISOString(),
     updatedAt: new Date(Date.now() - 10 * 24 * 3600000).toISOString(),
   },
@@ -129,6 +141,9 @@ class UserStore {
       tokenVersion: 1,
       reportsSubmitted: 0,
       verificationsCount: 0,
+      civicPoints: 0,
+      badges: [],
+      streakDays: 1,
       createdAt: now,
       updatedAt: now,
     };
@@ -258,8 +273,31 @@ class UserStore {
     const user = this.findUserById(userId);
     if (user) {
       user.verificationsCount += 1;
+      user.civicPoints = (user.civicPoints || 0) + 10;
       user.updatedAt = new Date().toISOString();
     }
+  }
+
+  incrementReports(userId: string, pointsBonus = 25) {
+    const user = this.findUserById(userId);
+    if (user) {
+      user.reportsSubmitted += 1;
+      user.civicPoints = (user.civicPoints || 0) + pointsBonus;
+      user.updatedAt = new Date().toISOString();
+    }
+  }
+
+  addCivicPoints(userId: string, points: number, badgeId?: string) {
+    const user = this.findUserById(userId);
+    if (user) {
+      user.civicPoints = Math.max(0, (user.civicPoints || 0) + points);
+      if (badgeId && !user.badges.includes(badgeId)) {
+        user.badges.push(badgeId);
+      }
+      user.updatedAt = new Date().toISOString();
+      return user;
+    }
+    return null;
   }
 
   logAdminAction(log: Omit<AdminAuditLog, "id" | "createdAt">): AdminAuditLog {

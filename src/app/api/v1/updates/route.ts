@@ -3,6 +3,8 @@ import { createUpdateSchema } from "@/lib/validation";
 import { applyRateLimit, getAnonFingerprint, RATE_LIMITS } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/lib/sanitize";
 import { dataStore } from "@/lib/data-store";
+import { getCurrentUser } from "@/lib/auth-helpers";
+import { userStore } from "@/lib/user-store";
 
 // POST /api/v1/updates — add a community update to a hazard
 export async function POST(request: NextRequest) {
@@ -26,11 +28,13 @@ export async function POST(request: NextRequest) {
 
   const { reportId, updateType, description } = parsed.data;
   const fingerprint = getAnonFingerprint(request);
+  const currentUser = await getCurrentUser();
 
   const update = dataStore.addUpdate({
     reportId,
     updateType,
     description: sanitizeInput(description),
+    contributorId: currentUser?.id,
     anonFingerprint: fingerprint,
   });
 
@@ -38,5 +42,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Report not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ success: true, update }, { status: 201 });
+  // Gamification: Award 15 Civic Points for on-the-ground updates
+  if (currentUser) {
+    userStore.addCivicPoints(currentUser.id, 15);
+  }
+
+  return NextResponse.json({ success: true, update, pointsEarned: currentUser ? 15 : 0 }, { status: 201 });
 }

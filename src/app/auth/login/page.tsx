@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
-import { Shield, Lock, Mail, AlertCircle, ArrowRight, UserCheck, ShieldAlert, Check } from "lucide-react";
+import { Shield, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const { locale, t } = useI18n();
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTarget = searchParams.get("redirect");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,8 +28,9 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res.success) {
-      // Determine redirection
-      if (email.includes("admin")) {
+      if (redirectTarget) {
+        router.push(redirectTarget);
+      } else if (email.includes("admin")) {
         router.push("/admin");
       } else if (email.includes("moderator")) {
         router.push("/moderation");
@@ -35,14 +38,13 @@ export default function LoginPage() {
         router.push("/dashboard");
       }
     } else {
-      setError(res.error || "Login failed. Please verify your credentials.");
+      setError(
+        res.error ||
+          (locale === "bn"
+            ? "লগইন ব্যর্থ হয়েছে। ইমেল এবং পাসওয়ার্ড সঠিক কিনা পরীক্ষা করুন।"
+            : "Login failed. Please verify your email and password.")
+      );
     }
-  };
-
-  const fillDemoCreds = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError(null);
   };
 
   return (
@@ -57,67 +59,21 @@ export default function LoginPage() {
         </h1>
         <p className="text-xs sm:text-sm text-gray-600">
           {locale === "bn"
-            ? "আপনার রিপোর্ট, নোটিশ ও মডারেশন কার্যক্রম পরিচালনা করতে প্রবেশ করুন।"
-            : "Sign in to manage your reports, moderation duties, or admin privileges."}
+            ? "আপনার রিপোর্ট, নোটিশ ও নাগরিক সেবা পরিচালনা করতে প্রবেশ করুন।"
+            : "Sign in to report hazards, track status, and view your civic reputation."}
         </p>
       </div>
 
-      {/* Demo Credentials Quick-Fill Cards */}
-      <div className="bg-gradient-to-br from-teal-50 to-blue-50 border border-teal-200/80 rounded-3xl p-4 shadow-xs space-y-2.5">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-teal-900 uppercase tracking-wide">
-          <UserCheck className="w-4 h-4 text-teal-600" />
-          <span>{locale === "bn" ? "টেস্টিং অ্যাকাউন্ট (এক ক্লিকে পূরণ করুন)" : "Quick Test Accounts (Click to Fill)"}</span>
+      {redirectTarget && (
+        <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-2xl flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+          <span>
+            {locale === "bn"
+              ? "হ্যাজার্ড রিপোর্ট পোস্ট করতে অনুগ্রহ করে প্রথমে সাইন ইন করুন।"
+              : "Please sign in to your account to submit a hazard report."}
+          </span>
         </div>
-        <div className="grid grid-cols-1 gap-2 text-xs">
-          <button
-            type="button"
-            onClick={() => fillDemoCreds("admin@nirapod.local", "Admin@123456")}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-white hover:bg-teal-100/50 border border-teal-200/60 text-left transition group shadow-2xs"
-          >
-            <div>
-              <span className="font-bold text-gray-900 block group-hover:text-teal-900">
-                👑 {locale === "bn" ? "সিস্টেম অ্যাডমিনিস্ট্রেটর" : "System Admin"}
-              </span>
-              <span className="text-[11px] text-gray-500 font-mono">admin@nirapod.local</span>
-            </div>
-            <span className="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">
-              Fill
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => fillDemoCreds("moderator@nirapod.local", "Mod@123456")}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-white hover:bg-teal-100/50 border border-teal-200/60 text-left transition group shadow-2xs"
-          >
-            <div>
-              <span className="font-bold text-gray-900 block group-hover:text-teal-900">
-                🛡️ {locale === "bn" ? "কমিউনিটি মডারেটর" : "City Moderator"}
-              </span>
-              <span className="text-[11px] text-gray-500 font-mono">moderator@nirapod.local</span>
-            </div>
-            <span className="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">
-              Fill
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => fillDemoCreds("user@nirapod.local", "User@123456")}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-white hover:bg-teal-100/50 border border-teal-200/60 text-left transition group shadow-2xs"
-          >
-            <div>
-              <span className="font-bold text-gray-900 block group-hover:text-teal-900">
-                👤 {locale === "bn" ? "সাধারণ নাগরিক (Tanvir Ahmed)" : "Verified Commuter"}
-              </span>
-              <span className="text-[11px] text-gray-500 font-mono">user@nirapod.local</span>
-            </div>
-            <span className="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">
-              Fill
-            </span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Main Login Form */}
       <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-7 shadow-xs space-y-4">
@@ -184,14 +140,26 @@ export default function LoginPage() {
             </>
           )}
         </button>
-
-        <div className="pt-3 border-t border-gray-100 text-center text-xs text-gray-500">
-          <span>{locale === "bn" ? "কোনো অ্যাকাউন্ট নেই?" : "Don't have an account?"} </span>
-          <Link href="/auth/register" className="font-bold text-teal-700 hover:text-teal-900 underline">
-            {locale === "bn" ? "বিনামূল্যে নিবন্ধন করুন" : "Register here"}
-          </Link>
-        </div>
       </form>
+
+      {/* Switch to Registration */}
+      <div className="text-center text-xs text-gray-500">
+        <span>{locale === "bn" ? "অ্যাকাউন্ট নেই? " : "Don't have an account? "}</span>
+        <Link
+          href={`/auth/register${redirectTarget ? `?redirect=${encodeURIComponent(redirectTarget)}` : ""}`}
+          className="font-bold text-teal-700 hover:text-teal-900 underline"
+        >
+          {locale === "bn" ? "নতুন অ্যাকাউন্ট তৈরি করুন" : "Create an Account"}
+        </Link>
+      </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="max-w-md mx-auto py-12 text-center text-xs text-gray-400">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

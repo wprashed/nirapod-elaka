@@ -3,6 +3,8 @@ import { createReportSchema, reportsQuerySchema } from "@/lib/validation";
 import { applyRateLimit, getAnonFingerprint, RATE_LIMITS } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/lib/sanitize";
 import { dataStore } from "@/lib/data-store";
+import { getCurrentUser } from "@/lib/auth-helpers";
+import { userStore } from "@/lib/user-store";
 
 // GET /api/v1/reports — list reports with filters & proximity
 export async function GET(request: NextRequest) {
@@ -41,7 +43,22 @@ export async function GET(request: NextRequest) {
 
 // POST /api/v1/reports — create a new report
 export async function POST(request: NextRequest) {
-  // Rate limiting for anonymous submissions
+  // Authentication required to submit reports
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return NextResponse.json(
+      { error: "Authentication required. You must sign in to submit a hazard report." },
+      { status: 401 }
+    );
+  }
+  if (currentUser.status === "suspended") {
+    return NextResponse.json(
+      { error: "Your account is currently suspended from submitting reports." },
+      { status: 403 }
+    );
+  }
+
+  // Rate limiting for authenticated submissions
   const rateLimitError = applyRateLimit(request, RATE_LIMITS.anonReport);
   if (rateLimitError) return rateLimitError;
 
@@ -100,6 +117,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const newReport = dataStore.createReport({
+      reporterId: currentUser.id,
       title: sanitized.title,
       description: sanitized.description,
       category: sanitized.category,
@@ -112,9 +130,14 @@ export async function POST(request: NextRequest) {
       expectedResolutionAt: sanitized.expectedResolutionAt,
     });
 
+    // Gamification: Award 25 Civic Points (+10 if photo attached)
+    const pointsBonus = sanitized.coverPhotoId ? 35 : 25;
+    userStore.incrementReports(currentUser.id, pointsBonus);
+
     return NextResponse.json(
       {
         report: newReport,
+        pointsEarned: pointsBonus,
         duplicateWarning: likelyDuplicate
           ? {
               message: "A similar hazard report exists nearby.",

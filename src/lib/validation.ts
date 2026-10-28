@@ -54,6 +54,7 @@ export const createReportSchema = z.object({
     )
     .optional(),
   expectedResolutionAt: z.string().datetime().optional(),
+  coverPhotoId: z.string().optional(),
 });
 
 export type CreateReportInput = z.infer<typeof createReportSchema>;

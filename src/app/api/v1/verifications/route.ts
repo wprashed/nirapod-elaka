@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { verificationSchema } from "@/lib/validation";
 import { applyRateLimit, getAnonFingerprint, RATE_LIMITS } from "@/lib/rate-limit";
 import { dataStore } from "@/lib/data-store";
+import { getCurrentUser } from "@/lib/auth-helpers";
+import { userStore } from "@/lib/user-store";
 
 // POST /api/v1/verifications — submit a community verification (confirm/dispute/resolve)
 export async function POST(request: NextRequest) {
@@ -25,10 +27,12 @@ export async function POST(request: NextRequest) {
 
   const { reportId, result } = parsed.data;
   const fingerprint = getAnonFingerprint(request);
+  const currentUser = await getCurrentUser();
 
   const res = dataStore.addVerification({
     reportId,
     result,
+    contributorId: currentUser?.id,
     anonFingerprint: fingerprint,
   });
 
@@ -46,5 +50,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return NextResponse.json({ success: true, report: res.report, event: res.event });
+  // Gamification: Award 10 Civic Points for contributing a verification
+  if (currentUser) {
+    userStore.incrementUserVerifyCount(currentUser.id);
+  }
+
+  return NextResponse.json({
+    success: true,
+    report: res.report,
+    event: res.event,
+    pointsEarned: currentUser ? 10 : 0,
+  });
 }

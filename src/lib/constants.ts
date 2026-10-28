@@ -141,16 +141,34 @@ export const STATUS_META: Record<ReportStatus, StatusMeta> = {
   },
 };
 
-// ─── Time helpers ─────────────────────────────────────────────────────────────
+// ─── Number & Time helpers ───────────────────────────────────────────────────
+
+const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
 
 /**
- * Format a Date as both relative ("2 hours ago") and absolute (BST).
+ * Convert ASCII arabic numerals (0-9) to Bengali numerals (০-৯).
  */
-export function formatTimestamp(date: Date | string | null | undefined): {
+export function toBengaliNumerals(input: string | number | null | undefined): string {
+  if (input === null || input === undefined) return "";
+  return String(input).replace(/[0-9]/g, (d) => BN_DIGITS[parseInt(d, 10)]);
+}
+
+/**
+ * Format a Date as both relative ("2 hours ago" / "২ ঘণ্টা আগে") and absolute (BST).
+ */
+export function formatTimestamp(
+  date: Date | string | null | undefined,
+  locale: "en" | "bn" = "en"
+): {
   relative: string;
   absolute: string;
 } {
-  if (!date) return { relative: "Unknown", absolute: "Unknown" };
+  if (!date) {
+    return {
+      relative: locale === "bn" ? "অজানা" : "Unknown",
+      absolute: locale === "bn" ? "অজানা সময়" : "Unknown",
+    };
+  }
   const d = typeof date === "string" ? new Date(date) : date;
   const now = Date.now();
   const diffMs = now - d.getTime();
@@ -159,17 +177,32 @@ export function formatTimestamp(date: Date | string | null | undefined): {
   const diffDay = Math.floor(diffMs / 86400000);
 
   let relative: string;
-  if (diffMin < 1) relative = "Just now";
-  else if (diffMin < 60) relative = `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
-  else if (diffHr < 24) relative = `${diffHr} hour${diffHr === 1 ? "" : "s"} ago`;
-  else if (diffDay < 7) relative = `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
-  else relative = d.toLocaleDateString("en-GB", { timeZone: "Asia/Dhaka" });
+  if (locale === "bn") {
+    if (diffMin < 1) relative = "এইমাত্র";
+    else if (diffMin < 60) relative = `${toBengaliNumerals(diffMin)} মিনিট আগে`;
+    else if (diffHr < 24) relative = `${toBengaliNumerals(diffHr)} ঘণ্টা আগে`;
+    else if (diffDay < 7) relative = `${toBengaliNumerals(diffDay)} দিন আগে`;
+    else relative = d.toLocaleDateString("bn-BD", { timeZone: "Asia/Dhaka" });
+  } else {
+    if (diffMin < 1) relative = "Just now";
+    else if (diffMin < 60) relative = `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
+    else if (diffHr < 24) relative = `${diffHr} hour${diffHr === 1 ? "" : "s"} ago`;
+    else if (diffDay < 7) relative = `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+    else relative = d.toLocaleDateString("en-GB", { timeZone: "Asia/Dhaka" });
+  }
 
-  const absolute = d.toLocaleString("en-GB", {
-    timeZone: "Asia/Dhaka",
-    dateStyle: "medium",
-    timeStyle: "short",
-  }) + " BST";
+  const absolute =
+    locale === "bn"
+      ? d.toLocaleString("bn-BD", {
+          timeZone: "Asia/Dhaka",
+          dateStyle: "medium",
+          timeStyle: "short",
+        }) + " (বিএসটি)"
+      : d.toLocaleString("en-GB", {
+          timeZone: "Asia/Dhaka",
+          dateStyle: "medium",
+          timeStyle: "short",
+        }) + " BST";
 
   return { relative, absolute };
 }

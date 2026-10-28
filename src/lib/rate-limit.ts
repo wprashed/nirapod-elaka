@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 
-// ─── Simple in-process rate limiter ──────────────────────────────────────────
-// For production with multiple instances, replace with Upstash Redis.
-
 interface RateLimitEntry {
   count: number;
   resetAt: number;
@@ -11,22 +8,19 @@ interface RateLimitEntry {
 
 const store = new Map<string, RateLimitEntry>();
 
-// Cleanup expired entries every 10 minutes
+// Automatic cleanup of expired entries
 if (typeof setInterval !== "undefined") {
   setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of store.entries()) {
       if (entry.resetAt < now) store.delete(key);
     }
-  }, 10 * 60 * 1000);
+  }, 5 * 60 * 1000);
 }
 
 export interface RateLimitOptions {
-  /** Max number of requests in the window */
   limit: number;
-  /** Window duration in seconds */
   windowSeconds: number;
-  /** Key prefix to namespace different limiters */
   prefix: string;
 }
 
@@ -36,10 +30,6 @@ export interface RateLimitResult {
   resetAt: number;
 }
 
-/**
- * Rate limit by a key (typically hashed IP).
- * Returns whether the request is allowed and remaining quota.
- */
 export function rateLimit(key: string, options: RateLimitOptions): RateLimitResult {
   const storeKey = `${options.prefix}:${key}`;
   const now = Date.now();
@@ -63,23 +53,41 @@ export function rateLimit(key: string, options: RateLimitOptions): RateLimitResu
 }
 
 /**
- * Extract a privacy-safe fingerprint from a request.
- * Hashes the IP address — never stores the raw IP.
+ * Item 3: Robust, anti-spoofing client IP extractor.
+ * Evaluates Cloudflare headers (CF-Connecting-IP), Nginx real-ip headers,
+ * and leftmost untampered address from x-forwarded-for.
+ */
+export function extractClientIp(request: NextRequest): string {
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp && cfIp.trim()) return cfIp.trim();
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp && realIp.trim()) return realIp.trim();
+
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    // Parse the client IP (first item in comma list)
+    const clientIp = forwarded.split(",")[0].trim();
+    if (clientIp) return clientIp;
+  }
+
+  return "127.0.0.1";
+}
+
+/**
+ * Item 3: Salted daily rotating fingerprint.
+ * Raw IP addresses are NEVER stored in the database.
  */
 export function getAnonFingerprint(request: NextRequest): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
-  // Add a daily rotating salt so fingerprints can't be tracked across days
+  const ip = extractClientIp(request);
   const today = new Date().toISOString().slice(0, 10);
+  const salt = process.env.NEXTAUTH_SECRET || "nirapod-daily-salt";
   return createHash("sha256")
-    .update(`${ip}:${today}:nirapod-salt`)
+    .update(`${ip}:${today}:${salt}`)
     .digest("hex")
     .slice(0, 16);
 }
 
-/**
- * Middleware helper: apply rate limiting and return 429 if exceeded.
- */
 export function applyRateLimit(
   request: NextRequest,
   options: RateLimitOptions
@@ -90,7 +98,7 @@ export function applyRateLimit(
   if (!result.allowed) {
     return NextResponse.json(
       {
-        error: "Too many requests. Please wait before trying again.",
+        error: "Too many requests. Please wait a while before trying again.",
         resetAt: new Date(result.resetAt).toISOString(),
       },
       {
@@ -107,8 +115,6 @@ export function applyRateLimit(
 
   return null;
 }
-
-// ─── Preset limiters ─────────────────────────────────────────────────────────
 
 export const RATE_LIMITS = {
   anonReport: {

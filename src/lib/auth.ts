@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
-import { SESSION_COOKIE_NAME, verifySessionToken, SessionPayload } from "./security";
-import { userStore, AppUser } from "./user-store";
+import { SESSION_COOKIE_NAME, verifySessionToken } from "./security";
+import { userStore } from "./user-store";
 
 export interface UserSession {
   user: {
@@ -14,7 +14,7 @@ export interface UserSession {
 
 /**
  * Server-side helper to get current session from HTTP-only cookie.
- * Verifies HMAC signature and checks live account status (e.g. not suspended).
+ * Verifies HMAC signature, checks live account status, and asserts tokenVersion freshness.
  */
 export async function auth(): Promise<UserSession | null> {
   try {
@@ -28,6 +28,11 @@ export async function auth(): Promise<UserSession | null> {
     // Check user exists in store and hasn't been suspended
     const liveUser = userStore.findUserById(payload.userId);
     if (!liveUser || liveUser.status === "suspended") {
+      return null;
+    }
+
+    // Item 2: Token version check (instant revocation on password change or suspension)
+    if (liveUser.tokenVersion !== payload.tokenVersion) {
       return null;
     }
 

@@ -45,7 +45,14 @@ export const createReportSchema = z.object({
   longitude: z.number().min(-180).max(180),
   publicLocationDesc: z.string().max(300).trim().optional(),
   nearbyLandmark: z.string().max(200).trim().optional(),
-  observedAt: z.string().datetime().optional(),
+  observedAt: z
+    .string()
+    .datetime()
+    .refine(
+      (val) => !val || new Date(val).getTime() <= Date.now() + 60000,
+      "Observation time cannot be in the future"
+    )
+    .optional(),
   expectedResolutionAt: z.string().datetime().optional(),
 });
 

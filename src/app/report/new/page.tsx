@@ -59,19 +59,76 @@ export default function NewReportPage() {
   const [createdReport, setCreatedReport] = useState<any | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<any | null>(null);
 
+  // Item 14 & 15: Clamp coordinates for privacy and auto reverse-geocode
   const handleLocationSelect = (lat: number, lng: number) => {
-    setLatitude(lat);
-    setLongitude(lng);
+    const clampedLat = Math.round(lat * 10000) / 10000;
+    const clampedLng = Math.round(lng * 10000) / 10000;
+    setLatitude(clampedLat);
+    setLongitude(clampedLng);
     setHasSelectedLocation(true);
-    checkDuplicates(lat, lng, category, title);
+    checkDuplicates(clampedLat, clampedLng, category, title);
+
+    // Item 15: Free OpenStreetMap reverse-geocoding
+    try {
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${clampedLat}&lon=${clampedLng}&format=json`,
+        { headers: { "Accept-Language": locale === "bn" ? "bn,en" : "en" } }
+      )
+        .then((res) => res.json())
+        .then((geo) => {
+          if (geo && geo.display_name && !publicLocationDesc) {
+            const parts = geo.display_name.split(", ");
+            setPublicLocationDesc(parts.slice(0, 3).join(", "));
+          }
+        })
+        .catch(() => {});
+    } catch {
+      // Ignore geocoding failure gracefully
+    }
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Item 19: Client-side image downsampling and WebP compression
+  const compressImageClient = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1280;
+          const scale = Math.min(1, MAX_WIDTH / img.width);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(
+                  new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), {
+                    type: "image/webp",
+                  })
+                );
+              } else {
+                resolve(file);
+              }
+            },
+            "image/webp",
+            0.82
+          );
+        };
+        img.src = ev.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError(locale === "bn" ? "ছবির সাইজ ৫ MB এর বেশি হতে পারবে না।" : "Photo must be less than 5 MB.");
+    if (file.size > 8 * 1024 * 1024) {
+      setError(locale === "bn" ? "ছবির সাইজ ৮ MB এর বেশি হতে পারবে না।" : "Photo must be less than 8 MB.");
       return;
     }
 
@@ -80,12 +137,13 @@ export default function NewReportPage() {
       return;
     }
 
-    setPhotoFile(file);
+    const compressed = await compressImageClient(file);
+    setPhotoFile(compressed);
     const reader = new FileReader();
     reader.onload = () => {
       setPhotoPreview(reader.result as string);
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(compressed);
     setError(null);
   };
 
@@ -151,7 +209,7 @@ export default function NewReportPage() {
         }
       }
 
-      // Submit Report
+      // Submit Report (Item 10: wire expectedDuration)
       const res = await fetch("/api/v1/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -164,6 +222,9 @@ export default function NewReportPage() {
           publicLocationDesc: publicLocationDesc.trim() || undefined,
           nearbyLandmark: nearbyLandmark.trim() || undefined,
           observedAt: observedAt || undefined,
+          expectedResolutionAt: expectedDuration
+            ? new Date(Date.now() + parseFloat(expectedDuration) * 3600000).toISOString()
+            : undefined,
           coverPhoto: uploadedPhotoUrl ? { id: "photo-new", publicUrl: uploadedPhotoUrl } : undefined,
         }),
       });
@@ -425,6 +486,38 @@ export default function NewReportPage() {
                 placeholder={locale === "bn" ? "যেমন: রাপা প্লাজার সামনে" : "e.g. In front of Rapa Plaza"}
                 className="w-full text-xs rounded-xl border border-gray-300 p-2.5 focus:ring-2 focus:ring-teal-500"
               />
+            </div>
+          </div>
+
+          {/* Timing & Expected Duration */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                {locale === "bn" ? "কখন দেখেছেন? (ঐচ্ছিক)" : "Observed Time (Optional)"}
+              </label>
+              <input
+                type="datetime-local"
+                value={observedAt ? observedAt.slice(0, 16) : ""}
+                onChange={(e) => setObservedAt(e.target.value ? new Date(e.target.value).toISOString() : "")}
+                max={new Date().toISOString().slice(0, 16)}
+                className="w-full text-xs rounded-xl border border-gray-300 p-2.5 focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                {locale === "bn" ? "আনুমানিক সময়কাল / কতক্ষণ থাকতে পারে?" : "Expected Duration (Optional)"}
+              </label>
+              <select
+                value={expectedDuration}
+                onChange={(e) => setExpectedDuration(e.target.value)}
+                className="w-full text-xs rounded-xl border border-gray-300 p-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="">{locale === "bn" ? "অজানা / অনুমান করা যাচ্ছে না" : "Unknown / Not sure"}</option>
+                <option value="1">{locale === "bn" ? "~ ১ ঘণ্টা" : "~ 1 hour"}</option>
+                <option value="3">{locale === "bn" ? "~ ৩ ঘণ্টা" : "~ 3 hours"}</option>
+                <option value="6">{locale === "bn" ? "~ ৬ ঘণ্টা (বেশ কিছুক্ষণ)" : "~ 6 hours"}</option>
+                <option value="24">{locale === "bn" ? "~ ১ দিন বা তার বেশি" : "~ 1 day or more"}</option>
+              </select>
             </div>
           </div>
         </div>

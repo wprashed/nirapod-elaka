@@ -44,6 +44,15 @@ export default function BrowsePage() {
     }
   };
 
+  // Debounce search (Item 21)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchReports();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   useEffect(() => {
     fetchReports();
   }, [category, status, sort, page]);
@@ -80,6 +89,14 @@ export default function BrowsePage() {
 
       {/* Filter & Controls Panel */}
       <div className="bg-white rounded-3xl border border-gray-200 p-4 sm:p-5 shadow-xs space-y-4">
+        {/* Screen reader announcement (Audit Item 29) */}
+        <div aria-live="polite" className="sr-only">
+          {loading
+            ? (locale === "bn" ? "রিপোর্ট অনুসন্ধান করা হচ্ছে..." : "Searching reports...")
+            : (locale === "bn"
+                ? `${reports.length} টি রিপোর্ট পাওয়া গেছে`
+                : `${reports.length} hazards found`)}
+        </div>
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="relative">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -209,11 +226,42 @@ export default function BrowsePage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {reports.map((report) => (
-              <ReportCard key={report.id} report={report} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {reports.map((report) => (
+                <ReportCard key={report.id} report={report} />
+              ))}
+            </div>
+
+            {/* Item 20: Pagination Controls */}
+            {total > 20 && (
+              <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-200 text-xs">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition"
+                >
+                  ← {locale === "bn" ? "পূর্ববর্তী" : "Previous"}
+                </button>
+
+                <span className="font-bold text-gray-600">
+                  {locale === "bn"
+                    ? `পৃষ্ঠা ${page} / ${Math.ceil(total / 20)}`
+                    : `Page ${page} of ${Math.ceil(total / 20)}`}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={page * 20 >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition"
+                >
+                  {locale === "bn" ? "পরবর্তী" : "Next"} →
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

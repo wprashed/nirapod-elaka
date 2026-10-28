@@ -31,7 +31,72 @@ export default function ModerationPage() {
   const [activeTab, setActiveTab] = useState<"queue" | "abuse" | "logs">("queue");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Moderation action modal state
+  // Multi-select for bulk actions (Item 23)
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredQueue.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredQueue.map((r) => r.id));
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkAction = async (action: "approve" | "resolve" | "archive") => {
+    if (selectedIds.length === 0) return;
+    const confirmPrompt = window.confirm(
+      `Execute bulk '${action}' on ${selectedIds.length} selected reports?`
+    );
+    if (!confirmPrompt) return;
+
+    setBulkActionLoading(true);
+    try {
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch("/api/v1/moderation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              reportId: id,
+              action,
+              reason: `Bulk moderation action: ${action} applied by civic officer`,
+              moderatorId: "mod-civic-officer",
+            }),
+          })
+        )
+      );
+      setSelectedIds([]);
+      fetchModerationData();
+    } catch {
+      alert("Some bulk actions failed to execute.");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  // Item 24: Action abuse reports
+  const handleActionAbuse = async (abuseId: string, reviewStatus: string, action?: string) => {
+    try {
+      const res = await fetch(`/api/v1/abuse/${abuseId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewStatus, action, notes: "Reviewed by moderator" }),
+      });
+      if (res.ok) {
+        fetchModerationData();
+      }
+    } catch {
+      alert("Failed to update abuse report status");
+    }
+  };
+
   const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
   const [actionType, setActionType] = useState<"approve" | "reject" | "resolve" | "archive" | "change_status">("approve");
   const [targetStatus, setTargetStatus] = useState<ReportStatus>("community_confirmed");
@@ -219,6 +284,52 @@ export default function ModerationPage() {
             ))}
           </div>
 
+          {/* Item 23: Bulk Action Toolbar */}
+          {filteredQueue.length > 0 && (
+            <div className="bg-white p-3 rounded-2xl border border-gray-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.length === filteredQueue.length && filteredQueue.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded text-teal-600 focus:ring-teal-500"
+                />
+                <span className="font-semibold text-gray-700">
+                  {selectedIds.length} of {filteredQueue.length} selected
+                </span>
+              </div>
+
+              {selectedIds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={bulkActionLoading}
+                    onClick={() => handleBulkAction("approve")}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-2xs transition disabled:opacity-50"
+                  >
+                    Bulk Approve ({selectedIds.length})
+                  </button>
+                  <button
+                    type="button"
+                    disabled={bulkActionLoading}
+                    onClick={() => handleBulkAction("resolve")}
+                    className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-2xs transition disabled:opacity-50"
+                  >
+                    Bulk Resolve ({selectedIds.length})
+                  </button>
+                  <button
+                    type="button"
+                    disabled={bulkActionLoading}
+                    onClick={() => handleBulkAction("archive")}
+                    className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow-2xs transition disabled:opacity-50"
+                  >
+                    Bulk Archive ({selectedIds.length})
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Table / List */}
           <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs">
             {filteredQueue.length === 0 ? (
@@ -229,27 +340,37 @@ export default function ModerationPage() {
               <div className="divide-y divide-gray-100">
                 {filteredQueue.map((rep) => {
                   const tTime = formatTimestamp(rep.createdAt);
+                  const isChecked = selectedIds.includes(rep.id);
+
                   return (
                     <div key={rep.id} className="p-4 sm:p-5 hover:bg-gray-50/60 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                      <div className="space-y-1.5 flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <CategoryBadge category={rep.category} />
-                          <StatusBadge status={rep.status} />
-                          <span className="text-[11px] text-gray-400 font-mono">ID: {rep.id}</span>
-                          <span className="text-[11px] text-gray-500">· {tTime.relative}</span>
-                        </div>
-                        <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">
-                          {rep.title}
-                        </h3>
-                        <p className="text-xs text-gray-600 line-clamp-2">{rep.description}</p>
-                        {rep.publicLocationDesc && (
-                          <div className="text-[11px] text-gray-500">
-                            📍 {rep.publicLocationDesc}
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleSelectOne(rep.id)}
+                          className="mt-1 rounded text-teal-600 focus:ring-teal-500"
+                        />
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <CategoryBadge category={rep.category} />
+                            <StatusBadge status={rep.status} />
+                            <span className="text-[11px] text-gray-400 font-mono">ID: {rep.id}</span>
+                            <span className="text-[11px] text-gray-500">· {tTime.relative}</span>
                           </div>
-                        )}
-                        <div className="flex items-center gap-3 text-[11px] text-gray-500 pt-1">
-                          <span className="text-emerald-700 font-medium">✓ {rep.confirmCount} confirms</span>
-                          <span className="text-amber-700 font-medium">⚠️ {rep.disputeCount} disputes</span>
+                          <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                            {rep.title}
+                          </h3>
+                          <p className="text-xs text-gray-600 line-clamp-2">{rep.description}</p>
+                          {rep.publicLocationDesc && (
+                            <div className="text-[11px] text-gray-500">
+                              📍 {rep.publicLocationDesc}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 text-[11px] text-gray-500 pt-1">
+                            <span className="text-emerald-700 font-medium">✓ {rep.confirmCount} confirms</span>
+                            <span className="text-amber-700 font-medium">⚠️ {rep.disputeCount} disputes</span>
+                          </div>
                         </div>
                       </div>
 
@@ -318,15 +439,43 @@ export default function ModerationPage() {
           ) : (
             <div className="divide-y divide-gray-100">
               {abuseReports.map((a) => (
-                <div key={a.id} className="py-3 flex items-start justify-between gap-4 text-xs">
+                <div key={a.id} className="py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
                   <div>
                     <span className="font-bold text-rose-700 block mb-0.5">Reason: {a.reason}</span>
                     {a.details && <p className="text-gray-600 mb-1">{a.details}</p>}
                     <span className="text-[11px] text-gray-400">Target Report: {a.targetReportId}</span>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase">
-                    {a.reviewStatus}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                      a.reviewStatus === "pending"
+                        ? "bg-amber-100 text-amber-800"
+                        : a.reviewStatus === "actioned"
+                        ? "bg-rose-100 text-rose-800"
+                        : "bg-gray-100 text-gray-700"
+                    }`}>
+                      {a.reviewStatus}
+                    </span>
+
+                    {/* Item 24: Direct interactive actions */}
+                    {a.reviewStatus === "pending" && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleActionAbuse(a.id, "dismissed")}
+                          className="px-2.5 py-1 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
+                        >
+                          Dismiss
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleActionAbuse(a.id, "actioned", "archive_target")}
+                          className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-semibold"
+                        >
+                          Takedown Report
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

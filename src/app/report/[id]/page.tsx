@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { VerifyModal } from "@/components/VerifyModal";
 import { UpdateModal } from "@/components/UpdateModal";
 import { AbuseModal } from "@/components/AbuseModal";
-import { formatTimestamp, isStale } from "@/lib/constants";
+import { formatTimestamp, isStale, toBengaliNumerals } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
 import {
   MapPin,
@@ -107,8 +107,8 @@ export default function ReportDetailPage() {
     );
   }
 
-  const createdTime = formatTimestamp(report.createdAt);
-  const confirmedTime = formatTimestamp(report.lastConfirmedAt);
+  const createdTime = formatTimestamp(report.createdAt, locale);
+  const confirmedTime = formatTimestamp(report.lastConfirmedAt, locale);
   const stale = isStale(
     report.lastConfirmedAt ? new Date(report.lastConfirmedAt) : null,
     report.createdAt
@@ -208,14 +208,14 @@ export default function ReportDetailPage() {
           <div>
             <span className="text-gray-400 block text-[11px]">{locale === "bn" ? "নিশ্চিত করেছেন" : "Confirmations"}</span>
             <span className="font-bold text-emerald-700 text-sm block mt-0.5">
-              {report.confirmCount} {locale === "bn" ? "জন" : "people"}
+              {locale === "bn" ? toBengaliNumerals(report.confirmCount) : report.confirmCount} {locale === "bn" ? "জন" : "people"}
             </span>
           </div>
 
           <div>
             <span className="text-gray-400 block text-[11px]">{locale === "bn" ? "বিরোধ / আপত্তি" : "Disputes"}</span>
             <span className="font-bold text-amber-700 text-sm block mt-0.5">
-              {report.disputeCount} {locale === "bn" ? "জন" : "people"}
+              {locale === "bn" ? toBengaliNumerals(report.disputeCount) : report.disputeCount} {locale === "bn" ? "জন" : "people"}
             </span>
           </div>
         </div>
@@ -309,7 +309,7 @@ export default function ReportDetailPage() {
           <h2 className="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">
             <span>{locale === "bn" ? "কমিউনিটি আপডেট হিস্ট্রি" : "Community Updates"}</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 font-semibold">
-              {report.updates?.length || 0}
+              {locale === "bn" ? toBengaliNumerals(report.updates?.length || 0) : report.updates?.length || 0}
             </span>
           </h2>
 
@@ -332,7 +332,7 @@ export default function ReportDetailPage() {
         ) : (
           <div className="space-y-3">
             {report.updates.map((upd: ReportUpdateItem) => {
-              const uTime = formatTimestamp(upd.createdAt);
+              const uTime = formatTimestamp(upd.createdAt, locale);
               return (
                 <div
                   key={upd.id}

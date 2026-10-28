@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { hashPassword, verifyPassword } from "./security";
 
 export interface AppUser {
@@ -8,12 +9,15 @@ export interface AppUser {
   passwordSalt: string;
   role: "user" | "moderator" | "admin";
   status: "active" | "suspended";
+  tokenVersion: number; // Item 2: Incremented on password change or suspension
   reportsSubmitted: number;
   verificationsCount: number;
   createdAt: string;
   updatedAt: string;
   suspendedReason?: string;
   suspendedAt?: string;
+  resetToken?: string;
+  resetTokenExpires?: number;
 }
 
 export interface AdminAuditLog {
@@ -27,7 +31,6 @@ export interface AdminAuditLog {
   createdAt: string;
 }
 
-// Initial seed passwords hashed with PBKDF2
 const adminCreds = hashPassword("Admin@123456");
 const modCreds = hashPassword("Mod@123456");
 const userCreds = hashPassword("User@123456");
@@ -41,6 +44,7 @@ const INITIAL_USERS: AppUser[] = [
     passwordSalt: adminCreds.salt,
     role: "admin",
     status: "active",
+    tokenVersion: 1,
     reportsSubmitted: 3,
     verificationsCount: 15,
     createdAt: new Date(Date.now() - 30 * 24 * 3600000).toISOString(),
@@ -54,6 +58,7 @@ const INITIAL_USERS: AppUser[] = [
     passwordSalt: modCreds.salt,
     role: "moderator",
     status: "active",
+    tokenVersion: 1,
     reportsSubmitted: 5,
     verificationsCount: 38,
     createdAt: new Date(Date.now() - 20 * 24 * 3600000).toISOString(),
@@ -67,6 +72,7 @@ const INITIAL_USERS: AppUser[] = [
     passwordSalt: userCreds.salt,
     role: "user",
     status: "active",
+    tokenVersion: 1,
     reportsSubmitted: 2,
     verificationsCount: 6,
     createdAt: new Date(Date.now() - 10 * 24 * 3600000).toISOString(),
@@ -120,6 +126,7 @@ class UserStore {
       passwordSalt: salt,
       role: data.role || "user",
       status: "active",
+      tokenVersion: 1,
       reportsSubmitted: 0,
       verificationsCount: 0,
       createdAt: now,
@@ -142,17 +149,23 @@ class UserStore {
     return list.map(({ passwordHash, passwordSalt, ...safeUser }) => safeUser);
   }
 
+  // Item 25: Guard against self-demotion
   updateUserRole(
     targetUserId: string,
     newRole: "user" | "moderator" | "admin",
     admin: { id: string; email: string },
     reason: string
   ): AppUser {
+    if (targetUserId === admin.id && newRole !== "admin") {
+      throw new Error("Security restriction: Administrators cannot demote their own account.");
+    }
+
     const target = this.findUserById(targetUserId);
     if (!target) throw new Error("Target user not found.");
 
     const oldRole = target.role;
     target.role = newRole;
+    target.tokenVersion += 1; // Invalidate sessions to refresh permissions
     target.updatedAt = new Date().toISOString();
 
     this.logAdminAction({
@@ -167,17 +180,23 @@ class UserStore {
     return target;
   }
 
+  // Item 2: Invalidate sessions upon suspension
   updateUserStatus(
     targetUserId: string,
     newStatus: "active" | "suspended",
     admin: { id: string; email: string },
     reason: string
   ): AppUser {
+    if (targetUserId === admin.id) {
+      throw new Error("Security restriction: Administrators cannot suspend their own account.");
+    }
+
     const target = this.findUserById(targetUserId);
     if (!target) throw new Error("Target user not found.");
 
     const now = new Date().toISOString();
     target.status = newStatus;
+    target.tokenVersion += 1; // Immediate session revocation
     target.updatedAt = now;
 
     if (newStatus === "suspended") {
@@ -198,6 +217,33 @@ class UserStore {
     });
 
     return target;
+  }
+
+  // Item 6: Password reset support
+  generatePasswordResetToken(email: string): string | null {
+    const user = this.findUserByEmail(email);
+    if (!user) return null;
+
+    const token = crypto.randomBytes(32).toString("hex");
+    user.resetToken = token;
+    user.resetTokenExpires = Date.now() + 3600000; // 1 hour expiration
+    return token;
+  }
+
+  resetPasswordWithToken(token: string, newPass: string): boolean {
+    const user = this.users.find(
+      (u) => u.resetToken === token && u.resetTokenExpires && u.resetTokenExpires > Date.now()
+    );
+    if (!user) return false;
+
+    const { hash, salt } = hashPassword(newPass);
+    user.passwordHash = hash;
+    user.passwordSalt = salt;
+    user.tokenVersion += 1; // Revoke old sessions
+    user.resetToken = undefined;
+    user.resetTokenExpires = undefined;
+    user.updatedAt = new Date().toISOString();
+    return true;
   }
 
   incrementUserReportCount(userId: string) {
@@ -226,8 +272,16 @@ class UserStore {
     return entry;
   }
 
-  getAuditLogs(): AdminAuditLog[] {
-    return this.auditLogs;
+  getAuditLogs(filters?: { action?: string; adminEmail?: string }): AdminAuditLog[] {
+    let logs = this.auditLogs;
+    if (filters?.action && filters.action !== "all") {
+      logs = logs.filter((l) => l.action === filters.action);
+    }
+    if (filters?.adminEmail && filters.adminEmail.trim()) {
+      const q = filters.adminEmail.toLowerCase().trim();
+      logs = logs.filter((l) => l.adminEmail.toLowerCase().includes(q));
+    }
+    return logs;
   }
 
   getStats() {

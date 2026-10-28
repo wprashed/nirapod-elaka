@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ReportItem } from "@/lib/types";
 import { CategoryBadge } from "./CategoryBadge";
 import { StatusBadge } from "./StatusBadge";
-import { formatTimestamp, isStale } from "@/lib/constants";
+import { formatTimestamp, isStale, toBengaliNumerals } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
 import { MapPin, Clock, ThumbsUp, AlertTriangle, ArrowRight, Camera, CheckCircle2 } from "lucide-react";
 
@@ -16,7 +16,7 @@ interface ReportCardProps {
 
 export function ReportCard({ report, className = "" }: ReportCardProps) {
   const { locale, t } = useI18n();
-  const timeInfo = formatTimestamp(report.createdAt);
+  const timeInfo = formatTimestamp(report.createdAt, locale);
   const stale = isStale(
     report.lastConfirmedAt ? new Date(report.lastConfirmedAt) : null,
     report.createdAt
@@ -96,7 +96,7 @@ export function ReportCard({ report, className = "" }: ReportCardProps) {
 
             <span className="flex items-center gap-1 text-emerald-700 font-medium" title="Confirmations">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{report.confirmCount}</span>
+              <span>{locale === "bn" ? toBengaliNumerals(report.confirmCount) : report.confirmCount}</span>
             </span>
 
             {report.coverPhoto && (

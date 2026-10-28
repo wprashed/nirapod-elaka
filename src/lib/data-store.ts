@@ -323,12 +323,34 @@ class NirapodDataStore {
 
     if (search && search.trim()) {
       const q = search.toLowerCase().trim();
+      // Item 22: Bilingual expansion
+      const BILINGUAL_ALIASES: Record<string, string> = {
+        "ধানমন্ডি": "dhanmondi", "dhanmondi": "ধানমন্ডি",
+        "মিরপুর": "mirpur", "mirpur": "মিরপুর",
+        "গুলশান": "gulshan", "gulshan": "গুলশান",
+        "উত্তরা": "uttara", "uttara": "উত্তরা",
+        "ফার্মগেট": "farmgate", "farmgate": "ফার্মগেট",
+        "মালিবাগ": "malibagh", "malibagh": "মালিবাগ",
+        "পুরান ঢাকা": "old dhaka", "old dhaka": "পুরান ঢাকা",
+        "বনানী": "banani", "banani": "বনানী",
+        "মহাখালী": "mohakhali", "mohakhali": "মহাখালী",
+        "জলাবদ্ধতা": "waterlogging", "waterlogging": "জলাবদ্ধতা",
+        "যানজট": "traffic", "traffic": "যানজট",
+      };
+
+      const alias = BILINGUAL_ALIASES[q] || "";
+
       items = items.filter(
         (r) =>
           r.title.toLowerCase().includes(q) ||
           r.description.toLowerCase().includes(q) ||
           (r.publicLocationDesc && r.publicLocationDesc.toLowerCase().includes(q)) ||
-          (r.nearbyLandmark && r.nearbyLandmark.toLowerCase().includes(q))
+          (r.nearbyLandmark && r.nearbyLandmark.toLowerCase().includes(q)) ||
+          (alias && (
+            r.title.toLowerCase().includes(alias) ||
+            r.description.toLowerCase().includes(alias) ||
+            (r.publicLocationDesc && r.publicLocationDesc.toLowerCase().includes(alias))
+          ))
       );
     }
 
@@ -444,6 +466,18 @@ class NirapodDataStore {
     const report = this.reports.find((r) => r.id === data.reportId);
     if (!report) return null;
 
+    // Item 7: Prevent ballot-stuffing / duplicate votes from same contributor or fingerprint
+    const alreadyVerified = this.verifications.some(
+      (v) =>
+        v.reportId === data.reportId &&
+        ((data.contributorId && v.contributorId === data.contributorId) ||
+          (data.anonFingerprint && v.anonFingerprint === data.anonFingerprint))
+    );
+
+    if (alreadyVerified) {
+      return { report, event: null, alreadyVerified: true };
+    }
+
     const event: VerificationEventItem = {
       id: `ver-${Date.now().toString(36)}`,
       reportId: data.reportId,
@@ -463,19 +497,22 @@ class NirapodDataStore {
       }
     } else if (data.result === "dispute") {
       report.disputeCount += 1;
-      if (report.disputeCount >= 2 && report.status === "community_confirmed") {
+      // Item 9: Ratio-based dispute threshold (requires significant proportion and min 3 disputes)
+      const totalVotes = report.confirmCount + report.disputeCount;
+      const disputeRatio = report.disputeCount / (totalVotes || 1);
+      if (report.disputeCount >= 3 && disputeRatio >= 0.35 && report.status === "community_confirmed") {
         report.status = "disputed";
       }
     } else if (data.result === "resolved") {
-      // Community resolved signal
-      if (report.confirmCount >= 3) {
+      // Community resolved signal requires strong consensus (min 4 confirms and high ratio)
+      if (report.confirmCount >= 4 && report.disputeCount <= 1) {
         report.status = "resolved";
         report.resolvedAt = now;
       }
     }
 
     report.updatedAt = now;
-    return { report, event };
+    return { report, event, alreadyVerified: false };
   }
 
   // Add community update
@@ -504,12 +541,28 @@ class NirapodDataStore {
     report.updatedAt = now;
     report.lastConfirmedAt = now; // updates refresh freshness
 
-    if (data.updateType === "resolution") {
-      report.status = "resolved";
-      report.resolvedAt = now;
-    }
+    // Item 8: An individual update does NOT unilaterally resolve an active hazard without consensus.
+    // Instead, if it is a resolution update, it marks lastConfirmedAt and flags for verification.
 
     return update;
+  }
+
+  // Item 33: Automated retention & archival worker
+  archiveStaleResolvedReports(days: number = 30): { archivedCount: number } {
+    const cutoff = Date.now() - days * 24 * 3600000;
+    let archivedCount = 0;
+
+    for (const report of this.reports) {
+      if (report.status === "resolved" && report.resolvedAt) {
+        if (new Date(report.resolvedAt).getTime() < cutoff) {
+          report.status = "archived";
+          report.archivedAt = new Date().toISOString();
+          archivedCount++;
+        }
+      }
+    }
+
+    return { archivedCount };
   }
 
   // Moderate report

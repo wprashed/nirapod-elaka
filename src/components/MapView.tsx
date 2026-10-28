@@ -230,26 +230,53 @@ export function MapView({
     setGpsLoading(true);
     setGpsError(null);
 
+    const onLocationSuccess = (pos: GeolocationPosition) => {
+      setGpsLoading(false);
+      const { latitude, longitude } = pos.coords;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.setView([latitude, longitude], 15, { animate: true });
+      }
+      if (onLocationSelect) {
+        onLocationSelect(latitude, longitude);
+      }
+    };
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGpsLoading(false);
-        const { latitude, longitude } = pos.coords;
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.setView([latitude, longitude], 15, { animate: true });
-        }
-        if (onLocationSelect) {
-          onLocationSelect(latitude, longitude);
-        }
-      },
+      onLocationSuccess,
       (err) => {
+        // Fallback retry with low accuracy on timeout (Audit Item 35)
+        if (err.code === err.TIMEOUT) {
+          navigator.geolocation.getCurrentPosition(
+            onLocationSuccess,
+            () => {
+              setGpsLoading(false);
+              setGpsError(
+                locale === "bn"
+                  ? "জিপিএস সময় শেষ হয়েছে। দয়া করে মানচিত্রে সরাসরি স্থান নির্বাচন করুন।"
+                  : "GPS location timed out. Please select location directly on the map."
+              );
+            },
+            { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 }
+          );
+          return;
+        }
+
         setGpsLoading(false);
         if (err.code === err.PERMISSION_DENIED) {
-          setGpsError(locale === "bn" ? "অবস্থান অ্যাক্সেসের অনুমতি দেওয়া হয়নি। ম্যানুয়ালি মানচিত্রে পিন ফেলুন।" : "Location permission denied. Please select location manually on the map.");
+          setGpsError(
+            locale === "bn"
+              ? "অবস্থান অ্যাক্সেসের অনুমতি দেওয়া হয়নি। ম্যানুয়ালি মানচিত্রে পিন ফেলুন।"
+              : "Location permission denied. Please select location manually on the map."
+          );
         } else {
-          setGpsError(locale === "bn" ? "অবস্থান পাওয়া যায়নি। আবার চেষ্টা করুন।" : "Could not determine location. Please try again or select manually.");
+          setGpsError(
+            locale === "bn"
+              ? "অবস্থান পাওয়া যায়নি। আবার চেষ্টা করুন।"
+              : "Could not determine location. Please try again or select manually."
+          );
         }
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 }
     );
   };
 

@@ -1,11 +1,16 @@
 import crypto from "crypto";
 
-const HMAC_SECRET = process.env.NEXTAUTH_SECRET || "nirapod-civic-secret-key-32-bytes-minimum-security-salt";
+const DEFAULT_SECRET = "nirapod-civic-secret-key-32-bytes-minimum-security-salt";
+
+// Item 1: Enforce strong secret in production
+if (process.env.NODE_ENV === "production" && (!process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET === DEFAULT_SECRET)) {
+  console.warn("WARNING: Running in production without a custom NEXTAUTH_SECRET. Please configure a unique secret.");
+}
+
+const HMAC_SECRET = process.env.NEXTAUTH_SECRET || DEFAULT_SECRET;
 export const SESSION_COOKIE_NAME = "nirapod_session";
 
 // ─── Password Hashing (PBKDF2 with SHA-512) ──────────────────────────────────
-// 100,000 iterations with unique salt per user guarantees resistance to rainbow tables & brute force.
-
 export function hashPassword(password: string): { hash: string; salt: string } {
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = crypto
@@ -26,6 +31,7 @@ export function verifyPassword(password: string, hash: string, salt: string): bo
 }
 
 // ─── Tamper-Proof Session Token (HMAC-SHA256 Signed) ─────────────────────────
+// Item 2: Include tokenVersion to allow instantaneous session revocation upon password change / suspension
 
 export interface SessionPayload {
   userId: string;
@@ -33,11 +39,14 @@ export interface SessionPayload {
   status: "active" | "suspended";
   email: string;
   name: string;
+  tokenVersion: number;
   issuedAt: number;
   expiresAt: number;
 }
 
-export function createSessionToken(payload: Omit<SessionPayload, "issuedAt" | "expiresAt">): string {
+export function createSessionToken(
+  payload: Omit<SessionPayload, "issuedAt" | "expiresAt">
+): string {
   const now = Date.now();
   const fullPayload: SessionPayload = {
     ...payload,

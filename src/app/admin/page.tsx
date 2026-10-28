@@ -38,6 +38,10 @@ export default function AdminDashboardPage() {
   const [searchUser, setSearchUser] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "governance" | "audit" | "config">("users");
 
+  // Audit log filtering state (Audit Item 26)
+  const [auditActionFilter, setAuditActionFilter] = useState("all");
+  const [auditSearchQuery, setAuditSearchQuery] = useState("");
+
   // User management action modal state
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [actionType, setActionType] = useState<"role" | "status">("role");
@@ -410,7 +414,7 @@ export default function AdminDashboardPage() {
       {/* Tab 2: Security & Audit Trail */}
       {activeTab === "audit" && (
         <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-2">
             <div>
               <h2 className="font-bold text-gray-900 text-base">
                 {locale === "bn" ? "প্রশাসনিক অডিট ট্রেল ও সিকিউরিটি লগ" : "Administrative Audit Trail"}
@@ -419,33 +423,81 @@ export default function AdminDashboardPage() {
                 All role elevations, account suspensions, and policy actions are permanently recorded.
               </p>
             </div>
-            <span className="text-xs font-mono text-gray-400">Total Entries: {auditLogs.length}</span>
+            <span className="text-xs font-mono text-gray-500">
+              Showing {auditLogs.filter((log) => {
+                if (auditActionFilter !== "all" && log.action !== auditActionFilter) return false;
+                if (auditSearchQuery.trim()) {
+                  const q = auditSearchQuery.toLowerCase();
+                  return (
+                    log.adminEmail?.toLowerCase().includes(q) ||
+                    log.targetUserEmail?.toLowerCase().includes(q) ||
+                    log.details?.toLowerCase().includes(q)
+                  );
+                }
+                return true;
+              }).length} of {auditLogs.length} entries
+            </span>
+          </div>
+
+          {/* Audit filter bar (Audit Item 26) */}
+          <div className="flex flex-col sm:flex-row gap-2 pt-1 pb-2">
+            <input
+              type="text"
+              placeholder={locale === "bn" ? "অ্যাডমিন বা টার্গেট ইমেল দিয়ে খুঁজুন..." : "Filter by email or keyword..."}
+              value={auditSearchQuery}
+              onChange={(e) => setAuditSearchQuery(e.target.value)}
+              className="flex-1 px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-700"
+            />
+            <select
+              value={auditActionFilter}
+              onChange={(e) => setAuditActionFilter(e.target.value)}
+              className="px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-700"
+            >
+              <option value="all">All Actions</option>
+              <option value="user_role_change">Role Changes</option>
+              <option value="user_suspended">Suspensions</option>
+              <option value="user_reactivated">Reactivations</option>
+              <option value="report_moderated">Moderation Decisions</option>
+            </select>
           </div>
 
           <div className="divide-y divide-gray-100">
-            {auditLogs.map((log) => {
-              const aTime = formatTimestamp(log.createdAt);
-              return (
-                <div key={log.id} className="py-3 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-teal-900 uppercase tracking-wide flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
-                      <span>{log.action}</span>
-                    </span>
-                    <span className="text-[11px] text-gray-400" title={aTime.absolute}>
-                      {aTime.relative}
-                    </span>
+            {auditLogs
+              .filter((log) => {
+                if (auditActionFilter !== "all" && log.action !== auditActionFilter) return false;
+                if (auditSearchQuery.trim()) {
+                  const q = auditSearchQuery.toLowerCase();
+                  return (
+                    log.adminEmail?.toLowerCase().includes(q) ||
+                    log.targetUserEmail?.toLowerCase().includes(q) ||
+                    log.details?.toLowerCase().includes(q)
+                  );
+                }
+                return true;
+              })
+              .map((log) => {
+                const aTime = formatTimestamp(log.createdAt);
+                return (
+                  <div key={log.id} className="py-3 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-teal-900 uppercase tracking-wide flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+                        <span>{log.action}</span>
+                      </span>
+                      <span className="text-[11px] text-gray-400" title={aTime.absolute}>
+                        {aTime.relative}
+                      </span>
+                    </div>
+                    <p className="text-gray-800">{log.details}</p>
+                    <div className="flex items-center gap-3 text-[11px] text-gray-400 pt-0.5">
+                      <span>Admin: <strong className="text-gray-600">{log.adminEmail}</strong></span>
+                      {log.targetUserEmail && (
+                        <span>Target: <strong className="text-gray-600">{log.targetUserEmail}</strong></span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-gray-800">{log.details}</p>
-                  <div className="flex items-center gap-3 text-[11px] text-gray-400 pt-0.5">
-                    <span>Admin: <strong className="text-gray-600">{log.adminEmail}</strong></span>
-                    {log.targetUserEmail && (
-                      <span>Target: <strong className="text-gray-600">{log.targetUserEmail}</strong></span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       )}

@@ -1,0 +1,17 @@
+{
+  "name": "NirapodElaka — নিরাপদ এলাকা",
+  "short_name": "NirapodElaka",
+  "description": "Community Hazard & Disruption Reporting Platform for Bangladesh",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f766e",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

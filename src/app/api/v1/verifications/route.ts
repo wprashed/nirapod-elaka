@@ -36,5 +36,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Report not found." }, { status: 404 });
   }
 
+  if (res.alreadyVerified) {
+    return NextResponse.json(
+      {
+        error: "You have already submitted a verification vote for this hazard report.",
+        report: res.report,
+      },
+      { status: 409 }
+    );
+  }
+
   return NextResponse.json({ success: true, report: res.report, event: res.event });
 }

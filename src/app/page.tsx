@@ -106,6 +106,14 @@ export default function HomePage() {
 
       {/* Search & Filters Bar */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs space-y-3">
+        {/* Screen-reader live region (Audit Item 29) */}
+        <div aria-live="polite" className="sr-only">
+          {loading
+            ? (locale === "bn" ? "হ্যাজার্ড তথ্য লোড হচ্ছে..." : "Loading hazards...")
+            : (locale === "bn"
+                ? `${reports.length} টি হ্যাজার্ড মানচিত্রে ও তালিকায় প্রদর্শিত হচ্ছে`
+                : `${reports.length} hazards currently displayed on map and list`)}
+        </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search Input */}
           <form onSubmit={handleSearchSubmit} className="relative flex-1">

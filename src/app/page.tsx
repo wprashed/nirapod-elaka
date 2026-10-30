@@ -49,6 +49,7 @@ export default function HomePage() {
       if (selectedCategory !== "all") params.append("category", selectedCategory);
       if (selectedStatus !== "all") params.append("status", selectedStatus);
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
+      params.append("limit", "50");
 
       const res = await fetch(`/api/v1/reports?${params.toString()}`);
       if (res.ok) {

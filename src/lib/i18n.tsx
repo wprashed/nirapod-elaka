@@ -30,12 +30,16 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("nirapod_locale") as Locale;
     if (saved === "en" || saved === "bn") {
       setLocaleState(saved);
+      document.documentElement.lang = saved;
+    } else {
+      document.documentElement.lang = "bn";
     }
   }, []);
 
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale);
     localStorage.setItem("nirapod_locale", newLocale);
+    document.documentElement.lang = newLocale;
   };
 
   const t = (keyPath: string, fallback?: string): string => {

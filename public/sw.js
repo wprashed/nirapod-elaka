@@ -27,8 +27,15 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Never intercept API routes or non-GET requests
-  if (event.request.method !== "GET" || event.request.url.includes("/api/")) {
+  // Never intercept API routes, authenticated routes, or non-GET requests
+  const url = new URL(event.request.url);
+  if (
+    event.request.method !== "GET" ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/admin") ||
+    url.pathname.startsWith("/moderation") ||
+    url.pathname.startsWith("/dashboard")
+  ) {
     return;
   }
 

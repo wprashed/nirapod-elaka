@@ -12,9 +12,11 @@ export interface AppUser {
   tokenVersion: number; // Item 2: Incremented on password change or suspension
   reportsSubmitted: number;
   verificationsCount: number;
+  updatesCount?: number;
   civicPoints: number; // Gamification civic score
   badges: string[];
   streakDays: number;
+  lastActiveDate?: string;
   createdAt: string;
   updatedAt: string;
   suspendedReason?: string;
@@ -261,10 +263,101 @@ class UserStore {
     return true;
   }
 
+  // Record daily streak logic
+  private updateStreak(user: AppUser) {
+    const today = new Date().toISOString().slice(0, 10);
+    if (!user.lastActiveDate) {
+      user.streakDays = 1;
+      user.lastActiveDate = today;
+      return;
+    }
+
+    if (user.lastActiveDate === today) {
+      return; // already recorded today
+    }
+
+    const prev = new Date(user.lastActiveDate);
+    const curr = new Date(today);
+    const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 3600 * 24));
+
+    if (diffDays === 1) {
+      user.streakDays = (user.streakDays || 0) + 1;
+    } else {
+      user.streakDays = 1;
+    }
+    user.lastActiveDate = today;
+  }
+
+  // Dynamic badge evaluation engine
+  private evaluateBadges(user: AppUser, context?: { category?: string }) {
+    if (!user.badges) user.badges = [];
+
+    // First alert badge
+    if (user.reportsSubmitted >= 1 && !user.badges.includes("first_alert")) {
+      user.badges.push("first_alert");
+    }
+
+    // Truth sentinel badge (3+ verifications)
+    if (user.verificationsCount >= 3 && !user.badges.includes("truth_sentinel")) {
+      user.badges.push("truth_sentinel");
+    }
+
+    // Category specific badges
+    if (context?.category) {
+      if (
+        context.category === "waterlogging" &&
+        !user.badges.includes("flood_scout")
+      ) {
+        user.badges.push("flood_scout");
+      }
+      if (
+        (context.category === "damaged_road" ||
+          context.category === "blocked_road" ||
+          context.category === "traffic_disruption" ||
+          context.category === "fallen_tree") &&
+        !user.badges.includes("route_guardian")
+      ) {
+        user.badges.push("route_guardian");
+      }
+    }
+
+    // Live reporter badge (2+ updates)
+    if ((user.updatesCount || 0) >= 2 && !user.badges.includes("live_reporter")) {
+      user.badges.push("live_reporter");
+    }
+
+    // Dhaka Hero (150+ points)
+    if (user.civicPoints >= 150 && !user.badges.includes("dhaka_hero")) {
+      user.badges.push("dhaka_hero");
+    }
+  }
+
+  revokeUserSession(userId: string) {
+    const user = this.findUserById(userId);
+    if (user) {
+      user.tokenVersion += 1;
+      user.updatedAt = new Date().toISOString();
+    }
+  }
+
+  deductCivicPoints(userId: string, points: number, reason?: string) {
+    const user = this.findUserById(userId);
+    if (user) {
+      user.civicPoints = Math.max(0, (user.civicPoints || 0) - points);
+      // Remove Dhaka hero badge if dropped below 150
+      if (user.civicPoints < 150 && user.badges.includes("dhaka_hero")) {
+        user.badges = user.badges.filter((b) => b !== "dhaka_hero");
+      }
+      user.updatedAt = new Date().toISOString();
+    }
+  }
+
   incrementUserReportCount(userId: string) {
     const user = this.findUserById(userId);
     if (user) {
       user.reportsSubmitted += 1;
+      this.updateStreak(user);
+      this.evaluateBadges(user);
       user.updatedAt = new Date().toISOString();
     }
   }
@@ -274,15 +367,30 @@ class UserStore {
     if (user) {
       user.verificationsCount += 1;
       user.civicPoints = (user.civicPoints || 0) + 10;
+      this.updateStreak(user);
+      this.evaluateBadges(user);
       user.updatedAt = new Date().toISOString();
     }
   }
 
-  incrementReports(userId: string, pointsBonus = 25) {
+  incrementReports(userId: string, pointsBonus = 25, category?: string) {
     const user = this.findUserById(userId);
     if (user) {
       user.reportsSubmitted += 1;
       user.civicPoints = (user.civicPoints || 0) + pointsBonus;
+      this.updateStreak(user);
+      this.evaluateBadges(user, { category });
+      user.updatedAt = new Date().toISOString();
+    }
+  }
+
+  incrementUpdatesCount(userId: string, pointsBonus = 15) {
+    const user = this.findUserById(userId);
+    if (user) {
+      user.updatesCount = (user.updatesCount || 0) + 1;
+      user.civicPoints = (user.civicPoints || 0) + pointsBonus;
+      this.updateStreak(user);
+      this.evaluateBadges(user);
       user.updatedAt = new Date().toISOString();
     }
   }
@@ -294,6 +402,8 @@ class UserStore {
       if (badgeId && !user.badges.includes(badgeId)) {
         user.badges.push(badgeId);
       }
+      this.updateStreak(user);
+      this.evaluateBadges(user);
       user.updatedAt = new Date().toISOString();
       return user;
     }

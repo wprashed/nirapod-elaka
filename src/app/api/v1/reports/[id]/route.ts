@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dataStore } from "@/lib/data-store";
 import { sanitizeInput } from "@/lib/sanitize";
+import { requireModerator, isAuthError } from "@/lib/auth-helpers";
 
 // GET /api/v1/reports/[id] — fetch single report details and updates
 export async function GET(
@@ -24,11 +25,14 @@ export async function GET(
   }
 }
 
-// PATCH /api/v1/reports/[id] — update report status (moderator or system)
+// PATCH /api/v1/reports/[id] — update report status (moderator or admin only)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const mod = await requireModerator();
+  if (isAuthError(mod)) return mod;
+
   let body: any;
   try {
     body = await request.json();
@@ -36,7 +40,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { status, reason, action = "change_status", moderatorId = "mod-demo" } = body;
+  const { status, reason, action = "change_status" } = body;
 
   if (!reason || reason.trim().length < 3) {
     return NextResponse.json(
@@ -51,7 +55,7 @@ export async function PATCH(
       action,
       status,
       reason: sanitizeInput(reason),
-      moderatorId,
+      moderatorId: mod.id,
     });
 
     if (!result) {

@@ -3,11 +3,15 @@ import { createUpdateSchema } from "@/lib/validation";
 import { applyRateLimit, getAnonFingerprint, RATE_LIMITS } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/lib/sanitize";
 import { dataStore } from "@/lib/data-store";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { requireAuth, isAuthError } from "@/lib/auth-helpers";
 import { userStore } from "@/lib/user-store";
 
 // POST /api/v1/updates — add a community update to a hazard
 export async function POST(request: NextRequest) {
+  // Authentication required to submit community updates
+  const currentUser = await requireAuth();
+  if (isAuthError(currentUser)) return currentUser;
+
   const rateLimitError = applyRateLimit(request, RATE_LIMITS.anonUpdate);
   if (rateLimitError) return rateLimitError;
 
@@ -26,15 +30,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { reportId, updateType, description } = parsed.data;
+  const { reportId, updateType, description, photoUrl } = parsed.data;
   const fingerprint = getAnonFingerprint(request);
-  const currentUser = await getCurrentUser();
 
   const update = dataStore.addUpdate({
     reportId,
     updateType,
     description: sanitizeInput(description),
-    contributorId: currentUser?.id,
+    photoUrl: photoUrl ? sanitizeInput(photoUrl) : null,
+    contributorId: currentUser.id,
     anonFingerprint: fingerprint,
   });
 
@@ -42,10 +46,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Report not found." }, { status: 404 });
   }
 
-  // Gamification: Award 15 Civic Points for on-the-ground updates
-  if (currentUser) {
-    userStore.addCivicPoints(currentUser.id, 15);
-  }
+  // Gamification: Award 15 Civic Points for on-the-ground updates & evaluate badges
+  userStore.incrementUpdatesCount(currentUser.id, 15);
 
-  return NextResponse.json({ success: true, update, pointsEarned: currentUser ? 15 : 0 }, { status: 201 });
+  return NextResponse.json({ success: true, update, pointsEarned: 15 }, { status: 201 });
 }

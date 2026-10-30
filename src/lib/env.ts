@@ -14,10 +14,14 @@ export function getValidatedEnv(): AppEnv {
   const nodeEnv = process.env.NODE_ENV || "development";
   const isProduction = nodeEnv === "production";
 
-  const jwtSecret = process.env.JWT_SECRET || (isProduction ? "" : "dev-only-insecure-secret-key-at-least-32-chars-long");
+  const jwtSecret =
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    process.env.JWT_SECRET ||
+    (isProduction ? "" : "dev-only-insecure-secret-key-at-least-32-chars-long");
   if (isProduction && (!jwtSecret || jwtSecret.length < 32)) {
     throw new Error(
-      "FATAL: In production, JWT_SECRET must be explicitly set to a cryptographically secure random string with at least 32 characters."
+      "FATAL: In production, AUTH_SECRET (or NEXTAUTH_SECRET / JWT_SECRET) must be set to at least 32 characters."
     );
   }
 

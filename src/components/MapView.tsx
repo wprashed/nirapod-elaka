@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ReportItem } from "@/lib/types";
 import { CATEGORY_META } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
@@ -46,6 +47,7 @@ export function MapView({
   showNeighborhoodJumps = true,
 }: MapViewProps) {
   const { locale, t } = useI18n();
+  const router = useRouter();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersLayerRef = useRef<any>(null);
@@ -94,6 +96,18 @@ export function MapView({
         });
       }
 
+      // Intercept popup link clicks to use client-side router
+      const container = mapContainerRef.current;
+      const handlePopupLinkClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        const link = target.closest("a.nirapod-popup-link") as HTMLAnchorElement | null;
+        if (link && link.getAttribute("href")) {
+          e.preventDefault();
+          router.push(link.getAttribute("href")!);
+        }
+      };
+      container?.addEventListener("click", handlePopupLinkClick);
+
       setMapReady(true);
     }
 
@@ -138,8 +152,8 @@ export function MapView({
 
         const marker = L.marker([rep.latitude, rep.longitude], { icon });
 
-        // Popup content
-        const timeInfo = formatTimestamp(rep.createdAt);
+        // Popup content with localized timestamp and client navigation
+        const timeInfo = formatTimestamp(rep.createdAt, locale);
         const popupHtml = `
           <div class="p-2 min-w-[220px] max-w-[280px] font-sans">
             <div class="flex items-center gap-1.5 mb-1.5">
@@ -158,7 +172,7 @@ export function MapView({
               <span>${timeInfo.relative}</span>
               ${stale ? `<span class="block text-amber-700 font-medium">⚠️ ${locale === "bn" ? "পুরোনো তথ্য" : "Outdated"}</span>` : ""}
             </div>
-            <a href="/report/${rep.id}" class="inline-block w-full text-center py-1.5 px-3 bg-teal-600 hover:bg-teal-700 text-white rounded text-xs font-semibold no-underline">
+            <a href="/report/${rep.id}" class="nirapod-popup-link inline-block w-full text-center py-1.5 px-3 bg-teal-600 hover:bg-teal-700 text-white rounded text-xs font-semibold no-underline">
               ${locale === "bn" ? "বিস্তারিত দেখুন" : "View Details"}
             </a>
           </div>

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { uploadReportPhoto } from "@/lib/uploads";
+import { requireAuth, isAuthError } from "@/lib/auth-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +44,10 @@ function verifyMagicBytes(buffer: Buffer): "image/jpeg" | "image/png" | "image/w
 }
 
 export async function POST(request: NextRequest) {
+  // Authentication required to upload media files
+  const user = await requireAuth();
+  if (isAuthError(user)) return user;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -77,28 +80,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadsDir = join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    const ext = verifiedMime === "image/png" ? "png" : verifiedMime === "image/webp" ? "webp" : "jpg";
-    const filename = `photo-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-    const filepath = join(uploadsDir, filename);
-
-    await writeFile(filepath, buffer);
+    // Process photo with Sharp (strip EXIF GPS, auto-orient, compress to WebP)
+    const uploadResult = await uploadReportPhoto(buffer, verifiedMime);
 
     return NextResponse.json({
       success: true,
-      publicUrl: `/uploads/${filename}`,
-      storageKey: filename,
-      mimeType: verifiedMime,
-      sizeBytes: file.size,
+      publicUrl: uploadResult.publicUrl,
+      storageKey: uploadResult.storageKey,
+      mimeType: uploadResult.mimeType,
+      sizeBytes: uploadResult.sizeBytes,
     });
   } catch (err: any) {
     console.error("Upload error:", err);
     return NextResponse.json(
-      { error: "Image processing or upload failed." },
+      { error: err.message || "Image processing or upload failed." },
       { status: 500 }
     );
   }

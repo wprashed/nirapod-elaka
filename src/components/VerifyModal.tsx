@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { CheckCircle2, AlertCircle, CheckCheck, X, ThumbsUp, Sparkles } from "lucide-react";
@@ -25,6 +25,16 @@ export function VerifyModal({
   const [selectedAction, setSelectedAction] = useState<"confirm" | "dispute" | "resolved">("confirm");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) onClose();
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -62,7 +72,12 @@ export function VerifyModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="verify-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+    >
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 relative">
         <button
           type="button"
@@ -73,7 +88,7 @@ export function VerifyModal({
           <X className="w-5 h-5" />
         </button>
 
-        <h3 className="font-bold text-lg text-gray-900 mb-1">
+        <h3 id="verify-modal-title" className="font-bold text-lg text-gray-900 mb-1">
           {locale === "bn" ? "কমিউনিটি যাচাইকরণ" : "Community Verification"}
         </h3>
         <p className="text-xs text-gray-600 mb-4 line-clamp-1 italic">"{reportTitle}"</p>

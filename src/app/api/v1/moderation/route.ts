@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dataStore } from "@/lib/data-store";
+import { requireModerator, isAuthError } from "@/lib/auth-helpers";
 
-// GET /api/v1/moderation — get queue, logs, and abuse reports
+export const dynamic = "force-dynamic";
+
+// GET /api/v1/moderation — get queue, logs, and abuse reports (Moderator/Admin only)
 export async function GET() {
+  const mod = await requireModerator();
+  if (isAuthError(mod)) return mod;
+
   const queue = dataStore.getReports({ limit: 100 });
   const logs = dataStore.getModerationLogs();
   const abuse = dataStore.getAbuseReports();
@@ -15,8 +21,11 @@ export async function GET() {
   });
 }
 
-// POST /api/v1/moderation — perform moderation action
+// POST /api/v1/moderation — perform moderation action (Moderator/Admin only)
 export async function POST(request: NextRequest) {
+  const mod = await requireModerator();
+  if (isAuthError(mod)) return mod;
+
   let body: any;
   try {
     body = await request.json();
@@ -24,7 +33,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { reportId, action, reason, status, moderatorId = "mod-demo" } = body;
+  const { reportId, action, reason, status } = body;
 
   if (!reportId || !action || !reason) {
     return NextResponse.json(
@@ -38,7 +47,7 @@ export async function POST(request: NextRequest) {
     action,
     reason,
     status,
-    moderatorId,
+    moderatorId: mod.id,
   });
 
   if (!result) {

@@ -17,6 +17,7 @@ export interface ReportItem {
   status: ReportStatus;
   confirmCount: number;
   disputeCount: number;
+  resolvedVotes?: string[];
   observedAt?: string | null;
   expectedResolutionAt?: string | null;
   resolvedAt?: string | null;
@@ -38,6 +39,8 @@ export interface ReportUpdateItem {
   anonFingerprint?: string | null;
   updateType: "general" | "status_update" | "severity_change" | "partial_resolution" | "resolution";
   description: string;
+  photoUrl?: string | null;
+  status?: "active" | "hidden";
   createdAt: string;
 }
 

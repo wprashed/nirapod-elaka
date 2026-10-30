@@ -35,7 +35,13 @@ function RegisterForm() {
     setLoading(false);
 
     if (res.success) {
-      router.push(redirectTarget || "/dashboard");
+      const isSafeRedirect =
+        redirectTarget &&
+        redirectTarget.startsWith("/") &&
+        !redirectTarget.startsWith("//") &&
+        !redirectTarget.includes(":");
+
+      router.push(isSafeRedirect ? redirectTarget : "/dashboard");
     } else {
       setError(res.error || (locale === "bn" ? "রেজিস্ট্রেশন ব্যর্থ হয়েছে। তথ্য যাচাই করুন।" : "Registration failed. Please check inputs."));
     }

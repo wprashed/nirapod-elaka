@@ -72,17 +72,13 @@ export default function NewReportPage() {
     setHasSelectedLocation(true);
     checkDuplicates(clampedLat, clampedLng, category, title);
 
-    // Item 15: Free OpenStreetMap reverse-geocoding
+    // Item 15: Reverse geocoding via cached internal proxy
     try {
-      fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${clampedLat}&lon=${clampedLng}&format=json`,
-        { headers: { "Accept-Language": locale === "bn" ? "bn,en" : "en" } }
-      )
+      fetch(`/api/v1/geocode/reverse?lat=${clampedLat}&lng=${clampedLng}&lang=${locale}`)
         .then((res) => res.json())
         .then((geo) => {
-          if (geo && geo.display_name && !publicLocationDesc) {
-            const parts = geo.display_name.split(", ");
-            setPublicLocationDesc(parts.slice(0, 3).join(", "));
+          if (geo && geo.address && !publicLocationDesc) {
+            setPublicLocationDesc(geo.address);
           }
         })
         .catch(() => {});
@@ -207,10 +203,17 @@ export default function NewReportPage() {
           method: "POST",
           body: formData,
         });
-        if (uploadRes.ok) {
-          const upData = await uploadRes.json();
-          uploadedPhotoUrl = upData.publicUrl;
+        if (!uploadRes.ok) {
+          const upErr = await uploadRes.json().catch(() => ({}));
+          throw new Error(
+            upErr.error ||
+              (locale === "bn"
+                ? "ছবি আপলোড ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।"
+                : "Photo upload failed. Please try again.")
+          );
         }
+        const upData = await uploadRes.json();
+        uploadedPhotoUrl = upData.publicUrl;
       }
 
       // Submit Report (Item 10: wire expectedDuration)

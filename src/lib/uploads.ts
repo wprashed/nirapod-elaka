@@ -15,7 +15,10 @@ export const MAX_UPLOAD_BYTES = parseInt(process.env.MAX_UPLOAD_BYTES ?? "524288
 
 // ─── Storage backend ──────────────────────────────────────────────────────────
 
-const USE_LOCAL = process.env.USE_LOCAL_STORAGE === "true";
+const USE_LOCAL =
+  process.env.USE_LOCAL_STORAGE === "true" ||
+  !process.env.R2_ACCOUNT_ID ||
+  !process.env.R2_ACCESS_KEY_ID;
 
 let s3Client: S3Client | null = null;
 

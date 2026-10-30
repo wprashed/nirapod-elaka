@@ -39,12 +39,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"split" | "map" | "list">("split");
   const [selectedCategory, setSelectedCategory] = useState<ReportCategory | "all">("all");
-  const [selectedStatus, setSelectedStatus] = useState<ReportStatus | "all">("all");
+  const [selectedStatus, setSelectedStatus] = useState<ReportStatus | "active" | "all">("active");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
 
   const fetchReports = async () => {
-    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (selectedCategory !== "all") params.append("category", selectedCategory);
@@ -64,7 +63,13 @@ export default function HomePage() {
   };
 
   useEffect(() => {
+    setLoading(true);
     fetchReports();
+    // Live polling: refresh hazards every 30 seconds
+    const interval = setInterval(() => {
+      fetchReports();
+    }, 30000);
+    return () => clearInterval(interval);
   }, [selectedCategory, selectedStatus]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {

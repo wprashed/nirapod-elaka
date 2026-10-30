@@ -6,8 +6,8 @@ import { SessionUser } from "./auth-helpers";
 interface AuthContextType {
   user: SessionUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: SessionUser }>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string; user?: SessionUser }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(data.user);
-      return { success: true };
+      return { success: true, user: data.user };
     } catch (err: any) {
       return { success: false, error: err.message || "An unexpected error occurred" };
     }
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(data.user);
-      return { success: true };
+      return { success: true, user: data.user };
     } catch (err: any) {
       return { success: false, error: err.message || "An unexpected error occurred" };
     }

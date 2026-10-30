@@ -72,7 +72,20 @@ export default function ReportDetailPage() {
     if (id) fetchReport();
   }, [id]);
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: report?.title || "NirapodElaka Hazard Alert",
+          text: `${report?.title || "Hazard"} - ${report?.publicLocationDesc || "Dhaka"}`,
+          url: window.location.href,
+        });
+        return;
+      } catch (err: any) {
+        if (err.name === "AbortError") return; // user cancelled share sheet
+      }
+    }
+
     if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
       setCopied(true);

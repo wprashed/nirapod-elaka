@@ -7,6 +7,7 @@ import { CATEGORY_META, STATUS_META, formatTimestamp } from "@/lib/constants";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import {
   ShieldAlert,
   CheckCircle2,
@@ -24,6 +25,7 @@ import {
 
 export default function ModerationPage() {
   const { locale, t } = useI18n();
+  const { user, loading: authLoading } = useAuth();
   const [queue, setQueue] = useState<ReportItem[]>([]);
   const [logs, setLogs] = useState<ModerationLogItem[]>([]);
   const [abuseReports, setAbuseReports] = useState<AbuseReportItem[]>([]);
@@ -67,7 +69,7 @@ export default function ModerationPage() {
               reportId: id,
               action,
               reason: `Bulk moderation action: ${action} applied by civic officer`,
-              moderatorId: "mod-civic-officer",
+              moderatorId: user?.id || "mod-civic-officer",
             }),
           })
         )
@@ -122,8 +124,10 @@ export default function ModerationPage() {
   };
 
   useEffect(() => {
-    fetchModerationData();
-  }, []);
+    if (user && (user.role === "moderator" || user.role === "admin")) {
+      fetchModerationData();
+    }
+  }, [user]);
 
   const handleOpenAction = (
     report: ReportItem,
@@ -156,7 +160,7 @@ export default function ModerationPage() {
           action: actionType,
           status: actionType === "change_status" ? targetStatus : undefined,
           reason: reason.trim(),
-          moderatorId: "mod-civic-officer",
+          moderatorId: user?.id || "mod-civic-officer",
         }),
       });
 
@@ -173,6 +177,39 @@ export default function ModerationPage() {
       setSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="py-20 text-center space-y-3">
+        <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs text-gray-500 font-medium">যাচাই হচ্ছে... / Verifying moderation credentials...</p>
+      </div>
+    );
+  }
+
+  if (!user || (user.role !== "moderator" && user.role !== "admin")) {
+    return (
+      <div className="max-w-md mx-auto py-16 text-center space-y-5">
+        <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-inner">
+          <ShieldAlert className="w-8 h-8" />
+        </div>
+        <h1 className="text-xl font-black text-gray-900">
+          {locale === "bn" ? "অননুমোদিত অ্যাক্সেস" : "Unauthorized Access"}
+        </h1>
+        <p className="text-xs text-gray-600 leading-relaxed">
+          {locale === "bn"
+            ? "এই পাতাটি শুধুমাত্র দায়িত্বপ্রাপ্ত মডারেটর এবং অ্যাডমিনিস্ট্রেটরদের জন্য সংরক্ষিত।"
+            : "This desk is restricted to authorized civic moderators and administrators."}
+        </p>
+        <Link
+          href="/auth/login?redirect=/moderation"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition"
+        >
+          <span>{locale === "bn" ? "মডারেটর হিসেবে সাইন ইন করুন" : "Sign In as Moderator"}</span>
+        </Link>
+      </div>
+    );
+  }
 
   const filteredQueue = queue.filter((r) => {
     if (statusFilter === "all") return true;

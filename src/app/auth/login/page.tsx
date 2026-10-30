@@ -28,11 +28,18 @@ function LoginForm() {
     setLoading(false);
 
     if (res.success) {
-      if (redirectTarget) {
+      // Validate redirectTarget to prevent Open Redirect attacks
+      const isSafeRedirect =
+        redirectTarget &&
+        redirectTarget.startsWith("/") &&
+        !redirectTarget.startsWith("//") &&
+        !redirectTarget.includes(":");
+
+      if (isSafeRedirect) {
         router.push(redirectTarget);
-      } else if (email.includes("admin")) {
+      } else if (res.user?.role === "admin") {
         router.push("/admin");
-      } else if (email.includes("moderator")) {
+      } else if (res.user?.role === "moderator") {
         router.push("/moderation");
       } else {
         router.push("/dashboard");

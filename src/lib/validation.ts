@@ -23,6 +23,7 @@ export const REPORT_STATUSES = [
   "disputed",
   "resolved",
   "archived",
+  "rejected",
 ] as const;
 
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
@@ -55,6 +56,12 @@ export const createReportSchema = z.object({
     .optional(),
   expectedResolutionAt: z.string().datetime().optional(),
   coverPhotoId: z.string().optional(),
+  coverPhoto: z
+    .object({
+      id: z.string(),
+      publicUrl: z.string(),
+    })
+    .optional(),
 });
 
 export type CreateReportInput = z.infer<typeof createReportSchema>;
@@ -62,7 +69,7 @@ export type CreateReportInput = z.infer<typeof createReportSchema>;
 // ─── Verification ─────────────────────────────────────────────────────────────
 
 export const verificationSchema = z.object({
-  reportId: z.string().uuid(),
+  reportId: z.string().min(1, "Report ID is required"),
   result: z.enum(["confirm", "dispute", "resolved"]),
 });
 
@@ -71,13 +78,14 @@ export type VerificationInput = z.infer<typeof verificationSchema>;
 // ─── Community update ─────────────────────────────────────────────────────────
 
 export const createUpdateSchema = z.object({
-  reportId: z.string().uuid(),
+  reportId: z.string().min(1, "Report ID is required"),
   updateType: z.enum(["general", "status_update", "severity_change", "partial_resolution", "resolution"]),
   description: z
     .string()
     .min(5, "Update must be at least 5 characters")
     .max(500, "Update must be at most 500 characters")
     .trim(),
+  photoUrl: z.string().optional(),
 });
 
 export type CreateUpdateInput = z.infer<typeof createUpdateSchema>;
@@ -85,8 +93,8 @@ export type CreateUpdateInput = z.infer<typeof createUpdateSchema>;
 // ─── Abuse report ─────────────────────────────────────────────────────────────
 
 export const abuseReportSchema = z.object({
-  targetReportId: z.string().uuid().optional(),
-  targetUpdateId: z.string().uuid().optional(),
+  targetReportId: z.string().min(1).optional(),
+  targetUpdateId: z.string().min(1).optional(),
   reason: z.string().min(3).max(100),
   details: z.string().max(1000).trim().optional(),
 }).refine((d) => d.targetReportId || d.targetUpdateId, {

@@ -40,6 +40,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Report not found." }, { status: 404 });
   }
 
+  if (res.selfVerification) {
+    return NextResponse.json(
+      { error: "Reporters cannot verify or vote on their own hazard reports.", report: res.report },
+      { status: 403 }
+    );
+  }
+
+  if (res.reportClosed) {
+    return NextResponse.json(
+      { error: "Voting is closed for this hazard report as it has already been resolved or archived.", report: res.report },
+      { status: 400 }
+    );
+  }
+
   if (res.alreadyVerified) {
     return NextResponse.json(
       {

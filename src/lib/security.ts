@@ -2,12 +2,18 @@ import crypto from "crypto";
 
 const DEFAULT_SECRET = "nirapod-civic-secret-key-32-bytes-minimum-security-salt";
 
+const AUTH_SECRET =
+  process.env.AUTH_SECRET ||
+  process.env.NEXTAUTH_SECRET ||
+  process.env.JWT_SECRET ||
+  DEFAULT_SECRET;
+
 // Item 1: Enforce strong secret in production
-if (process.env.NODE_ENV === "production" && (!process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET === DEFAULT_SECRET)) {
-  console.warn("WARNING: Running in production without a custom NEXTAUTH_SECRET. Please configure a unique secret.");
+if (process.env.NODE_ENV === "production" && AUTH_SECRET === DEFAULT_SECRET) {
+  console.warn("WARNING: Running in production without a custom AUTH_SECRET / NEXTAUTH_SECRET. Please configure a unique secret.");
 }
 
-const HMAC_SECRET = process.env.NEXTAUTH_SECRET || DEFAULT_SECRET;
+const HMAC_SECRET = AUTH_SECRET;
 export const SESSION_COOKIE_NAME = "nirapod_session";
 
 // ─── Password Hashing (PBKDF2 with SHA-512) ──────────────────────────────────

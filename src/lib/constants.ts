@@ -139,6 +139,13 @@ export const STATUS_META: Record<ReportStatus, StatusMeta> = {
     color: "bg-gray-100 text-gray-500",
     description: "This report has been archived.",
   },
+  rejected: {
+    key: "rejected",
+    labelEn: "Rejected / Spam",
+    labelBn: "বাতিল / স্প্যাম",
+    color: "bg-rose-100 text-rose-700",
+    description: "This report has been rejected by civic moderators.",
+  },
 };
 
 // ─── Number & Time helpers ───────────────────────────────────────────────────

@@ -17,8 +17,24 @@ export default function BrowsePage() {
   const [category, setCategory] = useState<ReportCategory | "all">("all");
   const [status, setStatus] = useState<ReportStatus | "all">("all");
   const [sort, setSort] = useState<"newest" | "nearest" | "recently_confirmed" | "unresolved">("newest");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+
+  // Acquire user location when nearest sort is selected
+  useEffect(() => {
+    if (sort === "nearest" && !userLocation && typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => {
+          console.warn("Location permission denied for nearest sort.");
+        },
+        { enableHighAccuracy: false, timeout: 6000 }
+      );
+    }
+  }, [sort, userLocation]);
 
   const fetchReports = async () => {
     setLoading(true);
@@ -28,6 +44,10 @@ export default function BrowsePage() {
       if (status !== "all") params.append("status", status);
       if (search.trim()) params.append("search", search.trim());
       params.append("sort", sort);
+      if (sort === "nearest" && userLocation) {
+        params.append("lat", userLocation.lat.toString());
+        params.append("lng", userLocation.lng.toString());
+      }
       params.append("page", page.toString());
       params.append("limit", "20");
 
@@ -44,18 +64,13 @@ export default function BrowsePage() {
     }
   };
 
-  // Debounce search (Item 21)
+  // Consolidated fetch with debounce for search
   useEffect(() => {
     const timer = setTimeout(() => {
-      setPage(1);
       fetchReports();
-    }, 350);
+    }, 250);
     return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
-    fetchReports();
-  }, [category, status, sort, page]);
+  }, [search, category, status, sort, page, userLocation]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

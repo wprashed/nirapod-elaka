@@ -113,4 +113,66 @@ describe("Nirapod Data Store & Lifecycle Engine", () => {
     const logs = dataStore.getModerationLogs();
     expect(logs[0].reportId).toBe(rep.id);
   });
+
+  it("prevents author self-verification and disallows voting on closed reports", () => {
+    const rep = dataStore.createReport({
+      reporterId: "usr-reporter-42",
+      title: "Self verification test hazard",
+      description: "Author should not be able to confirm own report.",
+      category: "waterlogging",
+      latitude: 23.75,
+      longitude: 90.38,
+    });
+
+    // Author cannot self-verify
+    const selfVote = dataStore.addVerification({
+      reportId: rep.id,
+      result: "confirm",
+      contributorId: "usr-reporter-42",
+    });
+    expect(selfVote?.selfVerification).toBe(true);
+    expect(selfVote?.event).toBeNull();
+
+    // Close the report
+    dataStore.moderateReport({
+      reportId: rep.id,
+      action: "resolve",
+      reason: "Hazard cleared",
+      moderatorId: "mod-1",
+    });
+
+    // Other user cannot vote on closed report
+    const closedVote = dataStore.addVerification({
+      reportId: rep.id,
+      result: "confirm",
+      contributorId: "usr-other-99",
+    });
+    expect(closedVote?.reportClosed).toBe(true);
+    expect(closedVote?.event).toBeNull();
+  });
+
+  it("sets status to rejected and persists cover photo on report creation", () => {
+    const rep = dataStore.createReport({
+      reporterId: "usr-spammer-1",
+      title: "Fake hazard for rejection test",
+      description: "Spam hazard description.",
+      category: "other",
+      latitude: 23.82,
+      longitude: 90.42,
+      coverPhoto: { id: "photo-test-1", publicUrl: "/uploads/photo-test-1.webp" },
+    });
+
+    expect(rep.coverPhoto).not.toBeNull();
+    expect(rep.coverPhoto?.publicUrl).toBe("/uploads/photo-test-1.webp");
+
+    const modResult = dataStore.moderateReport({
+      reportId: rep.id,
+      action: "reject",
+      reason: "Verified fake report with deceptive coordinates.",
+      moderatorId: "mod-chief",
+    });
+
+    expect(modResult?.report.status).toBe("rejected");
+    expect(modResult?.log.newStatus).toBe("rejected");
+  });
 });

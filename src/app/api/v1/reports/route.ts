@@ -130,11 +130,12 @@ export async function POST(request: NextRequest) {
       anonFingerprint: fingerprint,
       observedAt: sanitized.observedAt,
       expectedResolutionAt: sanitized.expectedResolutionAt,
+      coverPhoto: sanitized.coverPhoto || (sanitized.coverPhotoId ? { id: sanitized.coverPhotoId, publicUrl: `/uploads/${sanitized.coverPhotoId}` } : null),
     });
 
-    // Gamification: Award 25 Civic Points (+10 if photo attached)
-    const pointsBonus = sanitized.coverPhotoId ? 35 : 25;
-    userStore.incrementReports(currentUser.id, pointsBonus);
+    // Gamification: Award 25 Civic Points (+10 if photo attached) and dynamic badge evaluation
+    const pointsBonus = sanitized.coverPhoto || sanitized.coverPhotoId ? 35 : 25;
+    userStore.incrementReports(currentUser.id, pointsBonus, sanitized.category);
 
     return NextResponse.json(
       {

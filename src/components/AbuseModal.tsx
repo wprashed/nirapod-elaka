@@ -19,6 +19,16 @@ export function AbuseModal({ reportId, updateId, isOpen, onClose }: AbuseModalPr
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) onClose();
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +66,12 @@ export function AbuseModal({ reportId, updateId, isOpen, onClose }: AbuseModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="abuse-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+    >
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 relative">
         <button
           type="button"
@@ -69,7 +84,7 @@ export function AbuseModal({ reportId, updateId, isOpen, onClose }: AbuseModalPr
 
         <div className="flex items-center gap-2 mb-2 text-rose-600">
           <Flag className="w-5 h-5" />
-          <h3 className="font-bold text-lg text-gray-900">
+          <h3 id="abuse-modal-title" className="font-bold text-lg text-gray-900">
             {locale === "bn" ? "আপত্তিকর রিপোর্ট জমা দিন" : "Report Abuse or Spam"}
           </h3>
         </div>

@@ -26,14 +26,13 @@ import {
 
 export default function DashboardPage() {
   const { locale, t } = useI18n();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const url = user?.id
-      ? `/api/v1/reports?reporterId=${encodeURIComponent(user.id)}&limit=10`
-      : "/api/v1/reports?limit=10";
+    if (!user?.id) return;
+    const url = `/api/v1/reports?reporterId=${encodeURIComponent(user.id)}&limit=20`;
 
     fetch(url)
       .then((res) => res.json())
@@ -44,17 +43,50 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, [user?.id]);
 
+  if (authLoading) {
+    return (
+      <div className="py-20 text-center space-y-3">
+        <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs text-gray-500 font-medium">লোড হচ্ছে... / Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto py-16 text-center space-y-5">
+        <div className="w-16 h-16 rounded-3xl bg-teal-100 text-teal-700 flex items-center justify-center mx-auto shadow-inner">
+          <Lock className="w-8 h-8" />
+        </div>
+        <h1 className="text-xl font-black text-gray-900">
+          {locale === "bn" ? "ড্যাশবোর্ড অ্যাক্সেস প্রয়োজন" : "Dashboard Access Required"}
+        </h1>
+        <p className="text-xs text-gray-600 leading-relaxed">
+          {locale === "bn"
+            ? "আপনার রিপোর্ট, অর্জিত পয়েন্ট এবং ব্যাজ দেখতে অনুগ্রহ করে সাইন ইন করুন।"
+            : "Sign in to track your hazard submissions, earned points, and civic badges."}
+        </p>
+        <Link
+          href="/auth/login?redirect=/dashboard"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition"
+        >
+          <span>{locale === "bn" ? "সাইন ইন করুন" : "Sign In to Continue"}</span>
+        </Link>
+      </div>
+    );
+  }
+
   const pendingReports = reports.filter((r) => r.status === "submitted" || r.status === "under_review");
   const confirmedReports = reports.filter((r) => r.status === "community_confirmed");
 
-  // Compute gamification metrics
+  // Compute real gamification metrics from user session
   const gamification = computeGamification({
-    points: user?.civicPoints ?? 85,
-    reportsCount: user?.reportsSubmitted ?? 2,
-    verificationsCount: user?.verificationsCount ?? 6,
-    updatesCount: 2,
+    points: user.civicPoints || 0,
+    reportsCount: user.reportsSubmitted || 0,
+    verificationsCount: user.verificationsCount || 0,
+    updatesCount: reports.length > 0 ? 1 : 0,
     categoriesReported: reports.map((r) => r.category),
-    streakDays: user?.streakDays ?? 3,
+    streakDays: user.streakDays || 1,
   });
 
   return (

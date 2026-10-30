@@ -1,4 +1,5 @@
 import { ReportItem, ReportUpdateItem, VerificationEventItem, ModerationLogItem, AbuseReportItem, ReportCategory, ReportStatus } from "./types";
+import { userStore } from "./user-store";
 
 // Nirapod live in-memory store for citizen hazard reports
 class NirapodDataStore {
@@ -108,7 +109,7 @@ class NirapodDataStore {
   }) {
     const { lat, lng, radiusKm = 15, category, status, sort = "newest", search, reporterId, page = 1, limit = 20 } = query;
 
-    let items = this.reports.filter((r) => r.status !== "archived");
+    let items = this.reports.filter((r) => r.status !== "archived" && r.status !== "rejected");
 
     if (reporterId) {
       items = items.filter((r) => r.reporterId === reporterId);
@@ -119,7 +120,13 @@ class NirapodDataStore {
     }
 
     if (status) {
-      items = items.filter((r) => r.status === status);
+      if ((status as string) === "active") {
+        items = this.reports.filter(
+          (r) => r.status !== "resolved" && r.status !== "archived" && r.status !== "rejected"
+        );
+      } else {
+        items = this.reports.filter((r) => r.status === status);
+      }
     }
 
     if (sort === "unresolved") {
@@ -270,6 +277,16 @@ class NirapodDataStore {
     const report = this.reports.find((r) => r.id === data.reportId);
     if (!report) return null;
 
+    // Item 31: Prevent self-verification (author cannot verify own report)
+    if (data.contributorId && report.reporterId && report.reporterId === data.contributorId) {
+      return { report, event: null, alreadyVerified: false, selfVerification: true };
+    }
+
+    // Item 18: Disallow verification on closed or inactive reports
+    if (report.status === "resolved" || report.status === "archived" || report.status === "rejected") {
+      return { report, event: null, alreadyVerified: false, reportClosed: true };
+    }
+
     // Item 7: Prevent ballot-stuffing / duplicate votes from same contributor or fingerprint
     const alreadyVerified = this.verifications.some(
       (v) =>
@@ -308,8 +325,13 @@ class NirapodDataStore {
         report.status = "disputed";
       }
     } else if (data.result === "resolved") {
-      // Community resolved signal requires strong consensus (min 4 confirms and high ratio)
-      if (report.confirmCount >= 4 && report.disputeCount <= 1) {
+      // Item 17: Community resolved consensus requires min 3 distinct resolve votes
+      if (!report.resolvedVotes) report.resolvedVotes = [];
+      const voterKey = data.contributorId || data.anonFingerprint || "anon";
+      if (!report.resolvedVotes.includes(voterKey)) {
+        report.resolvedVotes.push(voterKey);
+      }
+      if (report.resolvedVotes.length >= 3 && report.disputeCount <= 1) {
         report.status = "resolved";
         report.resolvedAt = now;
       }
@@ -324,6 +346,7 @@ class NirapodDataStore {
     reportId: string;
     description: string;
     updateType: "general" | "status_update" | "severity_change" | "partial_resolution" | "resolution";
+    photoUrl?: string | null;
     contributorId?: string | null;
     anonFingerprint?: string | null;
   }) {
@@ -338,6 +361,8 @@ class NirapodDataStore {
       anonFingerprint: data.anonFingerprint || null,
       updateType: data.updateType,
       description: data.description,
+      photoUrl: data.photoUrl || null,
+      status: "active",
       createdAt: now,
     };
 
@@ -345,9 +370,14 @@ class NirapodDataStore {
     report.updatedAt = now;
     report.lastConfirmedAt = now; // updates refresh freshness
 
-    // Item 8: An individual update does NOT unilaterally resolve an active hazard without consensus.
-    // Instead, if it is a resolution update, it marks lastConfirmedAt and flags for verification.
+    return update;
+  }
 
+  // Item 21: Moderator update action (hide/restore)
+  moderateUpdate(updateId: string, action: "hide" | "restore") {
+    const update = this.updates.find((u) => u.id === updateId);
+    if (!update) return null;
+    update.status = action === "hide" ? "hidden" : "active";
     return update;
   }
 
@@ -394,7 +424,11 @@ class NirapodDataStore {
       nextStatus = "archived";
       report.archivedAt = new Date().toISOString();
     } else if (params.action === "reject") {
-      nextStatus = "disputed";
+      nextStatus = "rejected";
+      // Item 34: Deduct reputation from author on rejected fake/spam report
+      if (report.reporterId) {
+        userStore.deductCivicPoints(report.reporterId, 35, params.reason);
+      }
     }
 
     report.status = nextStatus;

@@ -1,5 +1,6 @@
 import { ReportItem, ReportUpdateItem, VerificationEventItem, ModerationLogItem, AbuseReportItem, ReportCategory, ReportStatus } from "./types";
 import { userStore } from "./user-store";
+import { NEWSPAPER_HAZARD_REPORTS } from "./newspaper-data";
 
 // Nirapod live in-memory store for citizen hazard reports
 class NirapodDataStore {
@@ -8,6 +9,29 @@ class NirapodDataStore {
   private verifications: VerificationEventItem[] = [];
   private moderationLogs: ModerationLogItem[] = [];
   private abuseReports: AbuseReportItem[] = [];
+
+  constructor() {
+    this.seedNewspaperReports();
+  }
+
+  // Seed authentic hazard reports sourced from Bangladeshi newspapers
+  seedNewspaperReports() {
+    if (this.reports.length === 0) {
+      this.reports = NEWSPAPER_HAZARD_REPORTS.map((item, idx) => ({
+        ...item,
+        id: `news-${idx + 1}-${item.category}`,
+      }));
+    }
+  }
+
+  // Clear reports for testing/resetting
+  clearReports() {
+    this.reports = [];
+    this.updates = [];
+    this.verifications = [];
+    this.moderationLogs = [];
+    this.abuseReports = [];
+  }
 
   // Haversine distance in kilometers
   private haversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -239,6 +263,7 @@ class NirapodDataStore {
     observedAt?: string | null;
     expectedResolutionAt?: string | null;
     coverPhoto?: { id: string; publicUrl: string } | null;
+    newsSource?: { name: string; url: string; publishedAt?: string } | null;
   }): ReportItem {
     const now = new Date().toISOString();
     const newReport: ReportItem = {
@@ -261,6 +286,7 @@ class NirapodDataStore {
       createdAt: now,
       updatedAt: now,
       coverPhoto: data.coverPhoto || null,
+      newsSource: data.newsSource || null,
     };
 
     this.reports.unshift(newReport);

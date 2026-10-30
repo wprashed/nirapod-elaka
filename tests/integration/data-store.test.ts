@@ -2,9 +2,12 @@ import { describe, it, expect } from "vitest";
 import { dataStore } from "@/lib/data-store";
 
 describe("Nirapod Data Store & Lifecycle Engine", () => {
-  it("initializes clean with empty reports list", () => {
+  it("initializes with verified recent Bangladeshi newspaper reports", () => {
     const res = dataStore.getReports({ limit: 10 });
-    expect(res.reports.length).toBe(0);
+    expect(res.reports.length).toBeGreaterThanOrEqual(8);
+    expect(res.reports[0].newsSource).toBeDefined();
+    expect(res.reports[0].newsSource?.name).toBeDefined();
+    expect(res.reports[0].newsSource?.url).toMatch(/^https?:\/\//);
   });
 
   it("creates a new hazard report and retrieves it by ID", () => {

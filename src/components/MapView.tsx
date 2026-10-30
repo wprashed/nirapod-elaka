@@ -156,11 +156,18 @@ export function MapView({
         const timeInfo = formatTimestamp(rep.createdAt, locale);
         const popupHtml = `
           <div class="p-2 min-w-[220px] max-w-[280px] font-sans">
-            <div class="flex items-center gap-1.5 mb-1.5">
-              <span class="text-base">${meta.icon}</span>
-              <span class="text-xs font-bold text-gray-800 uppercase tracking-wide">
-                ${locale === "bn" ? meta.labelBn : meta.labelEn}
-              </span>
+            <div class="flex items-center justify-between gap-1.5 mb-1.5">
+              <div class="flex items-center gap-1.5">
+                <span class="text-base">${meta.icon}</span>
+                <span class="text-xs font-bold text-gray-800 uppercase tracking-wide">
+                  ${locale === "bn" ? meta.labelBn : meta.labelEn}
+                </span>
+              </div>
+              ${
+                rep.newsSource
+                  ? `<span class="text-[9px] bg-blue-100 text-blue-800 font-semibold px-1.5 py-0.5 rounded" title="Verified News Source">📰 ${rep.newsSource.name}</span>`
+                  : ""
+              }
             </div>
             <h4 class="font-bold text-sm text-gray-900 mb-1 leading-snug">${rep.title}</h4>
             ${

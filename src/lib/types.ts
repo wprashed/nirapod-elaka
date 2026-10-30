@@ -30,6 +30,11 @@ export interface ReportItem {
     id: string;
     publicUrl: string;
   } | null;
+  newsSource?: {
+    name: string;
+    url: string;
+    publishedAt?: string;
+  } | null;
 }
 
 export interface ReportUpdateItem {

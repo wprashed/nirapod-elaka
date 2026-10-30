@@ -7,7 +7,7 @@ import { CategoryBadge } from "./CategoryBadge";
 import { StatusBadge } from "./StatusBadge";
 import { formatTimestamp, isStale, toBengaliNumerals } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
-import { MapPin, Clock, ThumbsUp, AlertTriangle, ArrowRight, Camera, CheckCircle2 } from "lucide-react";
+import { MapPin, Clock, ThumbsUp, AlertTriangle, ArrowRight, Camera, CheckCircle2, Newspaper, ExternalLink } from "lucide-react";
 
 interface ReportCardProps {
   report: ReportItem;
@@ -29,12 +29,26 @@ export function ReportCard({ report, className = "" }: ReportCardProps) {
       } ${className}`}
     >
       <div>
-        {/* Top meta row: Category + Status */}
+        {/* Top meta row: Category + Status + News Source */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <CategoryBadge category={report.category} />
             <StatusBadge status={report.status} />
           </div>
+          {report.newsSource && (
+            <a
+              href={report.newsSource.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 transition shadow-2xs"
+              title={locale === "bn" ? `সংবাদ সূত্র: ${report.newsSource.name}` : `News source: ${report.newsSource.name}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Newspaper className="w-3 h-3 text-blue-600 shrink-0" />
+              <span>{report.newsSource.name}</span>
+              <ExternalLink className="w-2.5 h-2.5 text-blue-500 shrink-0" />
+            </a>
+          )}
         </div>
 
         {/* Title */}

@@ -25,6 +25,8 @@ import {
   ShieldAlert,
   Info,
   CheckCheck,
+  Newspaper,
+  ExternalLink,
 } from "lucide-react";
 
 const MapView = dynamic(
@@ -171,6 +173,19 @@ export default function ReportDetailPage() {
                 👤 {locale === "bn" ? "যাচাইকৃত নাগরিক" : "Verified Citizen"}
               </span>
             )}
+            {report.newsSource && (
+              <a
+                href={report.newsSource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 transition shadow-2xs"
+                title={locale === "bn" ? `সংবাদ প্রতিবেদন: ${report.newsSource.name}` : `News source: ${report.newsSource.name}`}
+              >
+                <Newspaper className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>{report.newsSource.name}</span>
+                <ExternalLink className="w-3 h-3 text-blue-500 shrink-0" />
+              </a>
+            )}
           </div>
 
           <div className="text-[11px] text-gray-400 font-mono">
@@ -187,6 +202,39 @@ export default function ReportDetailPage() {
             {report.description}
           </p>
         </div>
+
+        {/* Newspaper Source Callout */}
+        {report.newsSource && (
+          <div className="p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 border border-blue-200/90 rounded-2xl flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700 shrink-0 mt-0.5">
+              <Newspaper className="w-4 h-4" />
+            </div>
+            <div className="space-y-1 text-xs">
+              <div className="font-bold text-blue-950 flex items-center gap-2">
+                <span>{locale === "bn" ? "সংবাদপত্র সূত্র দ্বারা যাচাইকৃত" : "Verified Newspaper Report"}</span>
+                <span className="text-[10px] px-2 py-0.5 bg-blue-200/60 text-blue-900 rounded-md font-semibold">
+                  {report.newsSource.name}
+                </span>
+              </div>
+              <p className="text-blue-900/80 leading-relaxed">
+                {locale === "bn"
+                  ? `এই বিঘ্নটির তথ্য বাংলাদেশের জাতীয় সংবাদমাধ্যম "${report.newsSource.name}"-এ প্রকাশিত মাঠপর্যায়ের রিপোর্টের ভিত্তিতে প্ল্যাটফর্মে যুক্ত ও যাচাই করা হয়েছে।`
+                  : `This incident was sourced and verified from investigative field reporting published by "${report.newsSource.name}".`}
+              </p>
+              <div className="pt-1">
+                <a
+                  href={report.newsSource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-900 font-semibold underline text-[11px]"
+                >
+                  <span>{locale === "bn" ? "অনলাইন প্রতিবেদন ও বিস্তারিত পড়ুন" : "Read published newspaper coverage"}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stale Warning Notice */}
         {stale && report.status !== "resolved" && (

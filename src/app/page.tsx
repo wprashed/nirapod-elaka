@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { ReportItem, ReportCategory, ReportStatus } from "@/lib/types";
@@ -35,6 +35,10 @@ import {
   Compass,
   FileCheck,
   TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 
 // Dynamically import MapView to prevent SSR window issues
@@ -61,13 +65,18 @@ export default function HomePage() {
   const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(6);
+  const feedTopRef = useRef<HTMLDivElement>(null);
+
   const fetchReports = async () => {
     try {
       const params = new URLSearchParams();
       if (selectedCategory !== "all") params.append("category", selectedCategory);
       if (selectedStatus !== "all") params.append("status", selectedStatus);
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
-      params.append("limit", "50");
+      params.append("limit", "100"); // Retrieve all items for rich client-side search & pagination
 
       const res = await fetch(`/api/v1/reports?${params.toString()}`);
       if (res.ok) {
@@ -84,6 +93,7 @@ export default function HomePage() {
 
   useEffect(() => {
     setLoading(true);
+    setCurrentPage(1);
     fetchReports();
     // Live polling: refresh hazards every 30 seconds
     const interval = setInterval(() => {
@@ -94,6 +104,7 @@ export default function HomePage() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setCurrentPage(1);
     fetchReports();
   };
 
@@ -113,13 +124,37 @@ export default function HomePage() {
 
   // Major Dhaka commuter corridors for 1-click filter
   const DHAKA_HOTSPOTS = [
-    { labelBn: "মিরপুর করিডোর", labelEn: "Mirpur Corridor", query: "মিরপুর" },
+    { labelBn: "মিরপুর (১০ ও কাজীপাড়া)", labelEn: "Mirpur Corridor", query: "মিরপুর" },
     { labelBn: "ধানমন্ডি ২৭", labelEn: "Dhanmondi 27", query: "ধানমন্ডি" },
-    { labelBn: "উত্তরা বিমানবন্দর", labelEn: "Uttara Airport", query: "উত্তরা" },
+    { labelBn: "উত্তরা ও দিয়াবাড়ি", labelEn: "Uttara & Diabari", query: "উত্তরা" },
+    { labelBn: "গুলশান ২ ও বারিধারা", labelEn: "Gulshan & Baridhara", query: "গুলশান" },
+    { labelBn: "বনানী ১১ নম্বর", labelEn: "Banani 11", query: "বনানী" },
+    { labelBn: "কুড়িল ও এক্সপ্রেসওয়ে", labelEn: "Kuril & Expressway", query: "কুড়িল" },
+    { labelBn: "বসুন্ধরা গেট", labelEn: "Bashundhara Gate", query: "বসুন্ধরা" },
     { labelBn: "মহাখালী আমতলী", labelEn: "Mohakhali Amtoli", query: "মহাখালী" },
+    { labelBn: "ফার্মগেট মোড়", labelEn: "Farmgate", query: "ফার্মগেট" },
+    { labelBn: "তেজগাঁও সাতরাস্তা", labelEn: "Tejgaon Satrasta", query: "তেজগাঁও" },
     { labelBn: "শাহবাগ ও টিএসসি", labelEn: "Shahbagh & TSC", query: "শাহবাগ" },
-    { labelBn: "পুরান ঢাকা", labelEn: "Old Dhaka", query: "পুরান ঢাকা" },
+    { labelBn: "মতিঝিল শাপলা চত্বর", labelEn: "Motijheel", query: "মতিঝিল" },
+    { labelBn: "মালিবাগ ও খিলগাঁও", labelEn: "Malibagh & Khilgaon", query: "মালিবাগ" },
+    { labelBn: "সায়েদাবাদ ও যাত্রাবাড়ী", labelEn: "Sayedabad", query: "সায়েদাবাদ" },
+    { labelBn: "পুরান ঢাকা ও লালবাগ", labelEn: "Old Dhaka & Lalbagh", query: "পুরান ঢাকা" },
+    { labelBn: "গাবতলী বেড়িবাঁধ", labelEn: "Gabtoli", query: "গাবতলী" },
   ];
+
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(reports.length / pageSize));
+  const paginatedReports = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return reports.slice(start, start + pageSize);
+  }, [reports, currentPage, pageSize]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    if (feedTopRef.current) {
+      feedTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -182,6 +217,7 @@ export default function HomePage() {
           onClick={() => {
             setSelectedCategory("all");
             setSelectedStatus("active");
+            setCurrentPage(1);
           }}
           className="text-left bg-white p-4 sm:p-5 rounded-2xl border border-gray-200/90 shadow-2xs hover:shadow-md hover:border-teal-300 transition group focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
@@ -204,7 +240,10 @@ export default function HomePage() {
 
         <button
           type="button"
-          onClick={() => setSelectedCategory("waterlogging")}
+          onClick={() => {
+            setSelectedCategory("waterlogging");
+            setCurrentPage(1);
+          }}
           className="text-left bg-white p-4 sm:p-5 rounded-2xl border border-gray-200/90 shadow-2xs hover:shadow-md hover:border-blue-300 transition group focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <div className="flex items-center justify-between mb-2">
@@ -226,7 +265,10 @@ export default function HomePage() {
 
         <button
           type="button"
-          onClick={() => setSelectedCategory("blocked_road")}
+          onClick={() => {
+            setSelectedCategory("blocked_road");
+            setCurrentPage(1);
+          }}
           className="text-left bg-white p-4 sm:p-5 rounded-2xl border border-gray-200/90 shadow-2xs hover:shadow-md hover:border-amber-300 transition group focus:outline-none focus:ring-2 focus:ring-amber-500"
         >
           <div className="flex items-center justify-between mb-2">
@@ -264,16 +306,28 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── 3. Quick Hotspot Corridors Strip ───────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-            <Navigation className="w-3.5 h-3.5 text-teal-600" />
-            <span>{locale === "bn" ? "দ্রুত এলাকা ফিল্টার:" : "Quick Corridor Filter:"}</span>
-          </span>
-          <span className="text-[11px] text-gray-500">
-            {locale === "bn" ? "এক ক্লিকে রিপোর্ট দেখুন" : "Click to focus zone"}
-          </span>
+      {/* ── 3. Quick Hotspot Corridors Strip (16 Popular Dhaka Locations) ── */}
+      <div className="bg-white rounded-3xl border border-gray-200 p-4 sm:p-5 shadow-2xs space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Navigation className="w-4 h-4 text-teal-600" />
+            <span className="text-xs sm:text-sm font-bold text-gray-900">
+              {locale === "bn" ? "ঢাকার গুরুত্বপূর্ণ এলাকা ও করিডোরসমূহ:" : "Key Dhaka Zones & Corridors:"}
+            </span>
+          </div>
+
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+              className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 underline"
+            >
+              {locale === "bn" ? "ফিল্টার মুছুন (Clear Filter)" : "Clear Filter"}
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -290,11 +344,12 @@ export default function HomePage() {
                     setSearchQuery(hotspot.query);
                   }
                   setSelectedCategory("all");
+                  setCurrentPage(1);
                 }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border ${
                   isActive
-                    ? "bg-teal-700 text-white border-teal-700 shadow-xs"
-                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200"
+                    ? "bg-teal-700 text-white border-teal-700 shadow-xs ring-2 ring-teal-500/30"
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 hover:border-gray-300 border-gray-200"
                 }`}
               >
                 <span>📍 {locale === "bn" ? hotspot.labelBn : hotspot.labelEn}</span>
@@ -325,8 +380,8 @@ export default function HomePage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
                 locale === "bn"
-                  ? "স্থান বা কীওয়ার্ড খুঁজুন (যেমন: ধানমন্ডি ২৭, মিরপুর ১০, মালিবাগ, কাজীপাড়া)..."
-                  : "Search location or keyword (e.g. Dhanmondi, Kazipara, Malibagh)..."
+                  ? "স্থান বা কীওয়ার্ড খুঁজুন (যেমন: ধানমন্ডি ২৭, মিরপুর ১০, কুড়িল, মতিঝিল, মালিবাগ)..."
+                  : "Search location or keyword (e.g. Dhanmondi, Kuril, Motijheel, Mirpur)..."
               }
               className="w-full pl-10 pr-20 py-2.5 text-xs sm:text-sm rounded-xl border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 bg-gray-50/50"
             />
@@ -337,6 +392,23 @@ export default function HomePage() {
               {locale === "bn" ? "খুঁজুন" : "Search"}
             </button>
           </form>
+
+          {/* Location Quick Dropdown Selector */}
+          <select
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="px-3 py-2 text-xs rounded-xl border border-gray-300 bg-gray-50 text-gray-700 font-medium focus:ring-2 focus:ring-teal-500"
+          >
+            <option value="">{locale === "bn" ? "📍 সকল এলাকা (ঢাকা)" : "📍 All Locations (Dhaka)"}</option>
+            {DHAKA_HOTSPOTS.map((h) => (
+              <option key={h.query} value={h.query}>
+                {locale === "bn" ? h.labelBn : h.labelEn}
+              </option>
+            ))}
+          </select>
 
           {/* View Toggle */}
           <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl self-end sm:self-auto text-xs font-medium">
@@ -382,7 +454,10 @@ export default function HomePage() {
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
           <button
             type="button"
-            onClick={() => setSelectedCategory("all")}
+            onClick={() => {
+              setSelectedCategory("all");
+              setCurrentPage(1);
+            }}
             className={`px-3 py-1.5 rounded-full font-medium whitespace-nowrap transition border ${
               selectedCategory === "all"
                 ? "bg-teal-700 text-white border-teal-700 shadow-xs"
@@ -398,7 +473,10 @@ export default function HomePage() {
               <button
                 key={cat}
                 type="button"
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setCurrentPage(1);
+                }}
                 className={`px-3 py-1.5 rounded-full font-medium whitespace-nowrap transition flex items-center gap-1.5 border ${
                   isSelected
                     ? "bg-teal-700 text-white border-teal-700 shadow-xs"
@@ -414,7 +492,7 @@ export default function HomePage() {
       </div>
 
       {/* ── 5. Main Map & Reports Feed Layout ─────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div ref={feedTopRef} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Interactive Map Section */}
         {(viewMode === "split" || viewMode === "map") && (
           <div className={viewMode === "split" ? "lg:col-span-7 space-y-4" : "lg:col-span-12 space-y-4"}>
@@ -451,7 +529,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Reports Feed Section */}
+        {/* Reports Feed Section with Pagination */}
         {(viewMode === "split" || viewMode === "list") && (
           <div className={viewMode === "split" ? "lg:col-span-5 space-y-4" : "lg:col-span-12 space-y-4"}>
             <div className="flex items-center justify-between">
@@ -462,15 +540,33 @@ export default function HomePage() {
                 </span>
               </h2>
 
-              <button
-                type="button"
-                onClick={fetchReports}
-                className="text-xs text-teal-700 hover:text-teal-900 font-medium flex items-center gap-1 p-1 rounded-md"
-                aria-label="Refresh reports list"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-                <span>{locale === "bn" ? "রিফ্রেশ" : "Refresh"}</span>
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Page Size Selector */}
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="text-[11px] py-1 px-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 font-medium"
+                  title="Items per page"
+                >
+                  <option value={4}>4 / page</option>
+                  <option value={6}>6 / page</option>
+                  <option value={10}>10 / page</option>
+                  <option value={20}>20 / page</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={fetchReports}
+                  className="text-xs text-teal-700 hover:text-teal-900 font-medium flex items-center gap-1 p-1 rounded-md"
+                  aria-label="Refresh reports list"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+                  <span>{locale === "bn" ? "রিফ্রেশ" : "Refresh"}</span>
+                </button>
+              </div>
             </div>
 
             {loading ? (
@@ -499,10 +595,113 @@ export default function HomePage() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[680px] overflow-y-auto pr-1">
-                {reports.map((report) => (
-                  <ReportCard key={report.id} report={report} />
-                ))}
+              <div className="space-y-3">
+                {/* Paginated Report Cards */}
+                <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
+                  {paginatedReports.map((report) => (
+                    <ReportCard key={report.id} report={report} />
+                  ))}
+                </div>
+
+                {/* ── Enhanced Pagination Bar ──────────────────────────── */}
+                {totalPages > 1 && (
+                  <nav
+                    aria-label="Reports feed pagination"
+                    className="bg-white rounded-2xl border border-gray-200 p-3 shadow-2xs flex flex-wrap items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="text-gray-500 font-medium">
+                      {locale === "bn"
+                        ? `পৃষ্ঠা ${toBengaliNumerals(currentPage)} এর ${toBengaliNumerals(totalPages)} (মোট ${toBengaliNumerals(reports.length)}টি)`
+                        : `Page ${currentPage} of ${totalPages} (${reports.length} total)`}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {/* First Page */}
+                      <button
+                        type="button"
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                        className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition"
+                        title={locale === "bn" ? "প্রথম পৃষ্ঠা" : "First page"}
+                        aria-label="First page"
+                      >
+                        <ChevronsLeft className="w-4 h-4" />
+                      </button>
+
+                      {/* Previous Page */}
+                      <button
+                        type="button"
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none font-semibold flex items-center gap-1 transition"
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <span>{locale === "bn" ? "পূর্ববর্তী" : "Prev"}</span>
+                      </button>
+
+                      {/* Numbered Page Buttons */}
+                      <div className="flex items-center gap-1 px-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
+                          const isEdge = pg === 1 || pg === totalPages;
+                          const isNearCurrent = Math.abs(pg - currentPage) <= 1;
+
+                          if (isEdge || isNearCurrent) {
+                            return (
+                              <button
+                                key={pg}
+                                type="button"
+                                onClick={() => handlePageChange(pg)}
+                                aria-current={currentPage === pg ? "page" : undefined}
+                                className={`w-7 h-7 rounded-lg text-xs font-bold transition ${
+                                  currentPage === pg
+                                    ? "bg-teal-700 text-white shadow-xs"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {locale === "bn" ? toBengaliNumerals(pg) : pg}
+                              </button>
+                            );
+                          }
+
+                          if (pg === currentPage - 2 || pg === currentPage + 2) {
+                            return (
+                              <span key={pg} className="px-0.5 text-gray-400">
+                                …
+                              </span>
+                            );
+                          }
+
+                          return null;
+                        })}
+                      </div>
+
+                      {/* Next Page */}
+                      <button
+                        type="button"
+                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none font-semibold flex items-center gap-1 transition"
+                        aria-label="Next page"
+                      >
+                        <span>{locale === "bn" ? "পরবর্তী" : "Next"}</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Last Page */}
+                      <button
+                        type="button"
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition"
+                        title={locale === "bn" ? "শেষ পৃষ্ঠা" : "Last page"}
+                        aria-label="Last page"
+                      >
+                        <ChevronsRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </nav>
+                )}
               </div>
             )}
           </div>

@@ -28,10 +28,17 @@ const DHAKA_AREAS = [
   { nameBn: "ধানমন্ডি", nameEn: "Dhanmondi", lat: 23.7533, lng: 90.3768 },
   { nameBn: "মিরপুর", nameEn: "Mirpur", lat: 23.8055, lng: 90.3685 },
   { nameBn: "গুলশান", nameEn: "Gulshan", lat: 23.7925, lng: 90.4162 },
+  { nameBn: "বনানী", nameEn: "Banani", lat: 23.7937, lng: 90.4046 },
   { nameBn: "উত্তরা", nameEn: "Uttara", lat: 23.8685, lng: 90.3990 },
+  { nameBn: "কুড়িল ও বসুন্ধরা", nameEn: "Kuril & Bashundhara", lat: 23.8182, lng: 90.4215 },
   { nameBn: "ফার্মগেট", nameEn: "Farmgate", lat: 23.7570, lng: 90.3890 },
-  { nameBn: "মালিবাগ", nameEn: "Malibagh", lat: 23.7485, lng: 90.4132 },
+  { nameBn: "তেজগাঁও", nameEn: "Tejgaon", lat: 23.7622, lng: 90.3992 },
+  { nameBn: "শাহবাগ ও টিএসসি", nameEn: "Shahbagh & TSC", lat: 23.7388, lng: 90.3955 },
+  { nameBn: "মতিঝিল", nameEn: "Motijheel", lat: 23.7292, lng: 90.4184 },
+  { nameBn: "মালিবাগ ও খিলগাঁও", nameEn: "Malibagh & Khilgaon", lat: 23.7485, lng: 90.4132 },
+  { nameBn: "সায়েদাবাদ", nameEn: "Sayedabad", lat: 23.7144, lng: 90.4305 },
   { nameBn: "পুরান ঢাকা", nameEn: "Old Dhaka", lat: 23.7104, lng: 90.4074 },
+  { nameBn: "গাবতলী", nameEn: "Gabtoli", lat: 23.7845, lng: 90.3475 },
 ];
 
 export function MapView({

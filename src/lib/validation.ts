@@ -118,7 +118,7 @@ export const reportsQuerySchema = z.object({
   status: z.enum(QUERY_STATUSES).optional(),
   sort: z.enum(["newest", "nearest", "recently_confirmed", "unresolved"]).default("newest"),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export type ReportsQuery = z.infer<typeof reportsQuerySchema>;

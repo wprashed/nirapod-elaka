@@ -11,19 +11,7 @@ NirapodElaka is an open, civic-tech web application that empowers residents acro
 
 ---
 
-## 1. Quick Testing Credentials (Pre-Seeded)
-
-The platform includes 3 pre-seeded role accounts for immediate testing:
-
-| Role | Email | Password | Access Privileges |
-|---|---|---|---|
-| **Root Civic Admin** | `admin@nirapod.local` | `Admin@123456` | Full administrative dashboard (`/admin`), user management, role elevation, suspension, audit trail |
-| **City Moderator** | `moderator@nirapod.local` | `Mod@123456` | Moderation desk (`/moderation`), queue review, hazard confirmation, status resolution |
-| **Verified Commuter** | `user@nirapod.local` | `User@123456` | Hazard reporting, verification, personal dashboard (`/dashboard`) |
-
----
-
-## 2. Civic Gamification & Reputation Engine
+## 1. Civic Gamification & Reputation Engine
 
 NirapodElaka features a constructive, safety-first gamification model designed to incentivize accurate contributions:
 
@@ -50,7 +38,7 @@ NirapodElaka features a constructive, safety-first gamification model designed t
 
 ---
 
-## 3. Security & Authentication Architecture
+## 2. Security & Authentication Architecture
 
 1. **Cryptographic Password Hashing:**
    - Powered by **PBKDF2** using `SHA-512` over **100,000 iterations** with a unique 16-byte cryptographic salt per citizen.
@@ -79,7 +67,7 @@ NirapodElaka features a constructive, safety-first gamification model designed t
 
 ---
 
-## 4. Dedicated Admin Dashboard (`/admin`)
+## 3. Dedicated Admin Dashboard (`/admin`)
 
 The protected **Admin Desk** provides:
 
@@ -102,7 +90,7 @@ The protected **Admin Desk** provides:
 
 ---
 
-## 5. Key Application Features
+## 4. Key Application Features
 
 1. **Interactive Community Map (`/`):**
    - High-contrast OpenStreetMap integration using Leaflet with custom SVG/DivIcon markers for all 9 hazard categories.
@@ -131,7 +119,7 @@ The protected **Admin Desk** provides:
 
 ---
 
-## 6. Running the Application & Tests
+## 5. Running the Application & Tests
 
 ```bash
 cd /Users/rashed/Projects/nirapod-elaka

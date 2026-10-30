@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import { NEWSPAPER_HAZARD_REPORTS } from "@/lib/newspaper-data";
 
 describe("Bangladeshi Newspaper Hazard Dataset", () => {
-  it("contains at least 8 authentic reported incidents", () => {
-    expect(NEWSPAPER_HAZARD_REPORTS.length).toBeGreaterThanOrEqual(8);
+  it("contains at least 14 authentic reported incidents across multiple categories", () => {
+    expect(NEWSPAPER_HAZARD_REPORTS.length).toBeGreaterThanOrEqual(14);
+    const categories = new Set(NEWSPAPER_HAZARD_REPORTS.map((r) => r.category));
+    expect(categories.size).toBeGreaterThanOrEqual(6);
   });
 
   it("ensures all entries have valid Dhaka coordinates", () => {

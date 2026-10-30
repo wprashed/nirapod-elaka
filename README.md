@@ -125,6 +125,10 @@ The protected **Admin Desk** provides:
    - Multi-select bulk actions (Bulk Approve, Resolve, Archive).
    - Interactive abuse report triage (Dismiss, Takedown).
 
+5. **Verified Newspaper Sourced Reports:**
+   - Pre-seeded with authentic, geotagged civic disruption incidents sourced from leading Bangladeshi news publications (*The Daily Star*, *Dhaka Tribune*, and *দৈনিক প্রথম আলো*).
+   - Includes direct source citation badges, exact coordinates, landmark notes, and links to original news coverage.
+
 ---
 
 ## 6. Running the Application & Tests
@@ -132,7 +136,7 @@ The protected **Admin Desk** provides:
 ```bash
 cd /Users/rashed/Projects/nirapod-elaka
 
-# Run test suite (25 unit & integration tests)
+# Run test suite (31 unit & integration tests)
 npm test
 
 # Run Next.js production build

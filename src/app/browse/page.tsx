@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ReportItem, ReportCategory, ReportStatus } from "@/lib/types";
 import { REPORT_CATEGORIES, REPORT_STATUSES } from "@/lib/validation";
-import { CATEGORY_META, STATUS_META } from "@/lib/constants";
+import { CATEGORY_META, STATUS_META, toBengaliNumerals } from "@/lib/constants";
 import { ReportCard } from "@/components/ReportCard";
 import { useI18n } from "@/lib/i18n";
 import { Search, ListFilter, ArrowUpDown, PlusCircle, RefreshCw, AlertCircle } from "lucide-react";
@@ -109,7 +109,7 @@ export default function BrowsePage() {
           {loading
             ? (locale === "bn" ? "রিপোর্ট অনুসন্ধান করা হচ্ছে..." : "Searching reports...")
             : (locale === "bn"
-                ? `${reports.length} টি রিপোর্ট পাওয়া গেছে`
+                ? `${toBengaliNumerals(reports.length)}টি রিপোর্ট পাওয়া গেছে`
                 : `${reports.length} hazards found`)}
         </div>
         {/* Search */}
@@ -207,7 +207,7 @@ export default function BrowsePage() {
         <div className="flex items-center justify-between text-xs text-gray-500 px-1">
           <span>
             {locale === "bn"
-              ? `মোট পাওয়া গেছে: ${total} টি রিপোর্ট`
+              ? `মোট পাওয়া গেছে: ${toBengaliNumerals(total)}টি রিপোর্ট`
               : `Showing ${reports.length} of ${total} reports`}
           </span>
           <button
@@ -262,7 +262,7 @@ export default function BrowsePage() {
 
                 <span className="font-bold text-gray-600">
                   {locale === "bn"
-                    ? `পৃষ্ঠা ${page} / ${Math.ceil(total / 20)}`
+                    ? `পৃষ্ঠা ${toBengaliNumerals(page)} এর ${toBengaliNumerals(Math.ceil(total / 20))}`
                     : `Page ${page} of ${Math.ceil(total / 20)}`}
                 </span>
 

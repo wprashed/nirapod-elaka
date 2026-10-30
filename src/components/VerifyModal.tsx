@@ -193,7 +193,7 @@ export function VerifyModal({
                 {locale === "bn" ? "ভেরিফিকেশন সম্পন্ন করলে অর্জিত হবে:" : "Points earned for verification:"}
               </span>
               <span className="font-bold text-amber-800 bg-white px-2 py-0.5 rounded-md border border-amber-200">
-                +১০ pts
+                {locale === "bn" ? "+১০ pts" : "+10 pts"}
               </span>
             </div>
           )}

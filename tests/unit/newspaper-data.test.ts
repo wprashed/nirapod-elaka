@@ -35,4 +35,33 @@ describe("Bangladeshi Newspaper Hazard Dataset", () => {
       expect(report.publicLocationDesc).toBeDefined();
     });
   });
+
+  it("ensures all 32 reports contain complete, strict bilingual content", () => {
+    const bengaliRegex = /[\u0980-\u09FF]/;
+
+    NEWSPAPER_HAZARD_REPORTS.forEach((report, index) => {
+      // Bengali fields must exist and contain Bengali characters
+      expect(report.titleBn, `Report #${index + 1} missing titleBn`).toBeDefined();
+      expect(report.descriptionBn, `Report #${index + 1} missing descriptionBn`).toBeDefined();
+      expect(bengaliRegex.test(report.titleBn!), `Report #${index + 1} titleBn lacks Bengali characters`).toBe(true);
+      expect(bengaliRegex.test(report.descriptionBn!), `Report #${index + 1} descriptionBn lacks Bengali characters`).toBe(true);
+
+      // English fields must exist and MUST NOT contain any Bengali characters or numerals
+      expect(report.titleEn, `Report #${index + 1} missing titleEn`).toBeDefined();
+      expect(report.descriptionEn, `Report #${index + 1} missing descriptionEn`).toBeDefined();
+      expect(report.titleEn!.length, `Report #${index + 1} titleEn is too short`).toBeGreaterThan(10);
+      expect(report.descriptionEn!.length, `Report #${index + 1} descriptionEn is too short`).toBeGreaterThan(20);
+      expect(bengaliRegex.test(report.titleEn!), `Report #${index + 1} titleEn contains illegal Bengali characters: ${report.titleEn}`).toBe(false);
+      expect(bengaliRegex.test(report.descriptionEn!), `Report #${index + 1} descriptionEn contains illegal Bengali characters: ${report.descriptionEn}`).toBe(false);
+
+      // Locations and landmarks must also be bilingually populated
+      expect(report.publicLocationDescBn).toBeDefined();
+      expect(report.publicLocationDescEn).toBeDefined();
+      expect(bengaliRegex.test(report.publicLocationDescEn!)).toBe(false);
+
+      expect(report.nearbyLandmarkBn).toBeDefined();
+      expect(report.nearbyLandmarkEn).toBeDefined();
+      expect(bengaliRegex.test(report.nearbyLandmarkEn!)).toBe(false);
+    });
+  });
 });

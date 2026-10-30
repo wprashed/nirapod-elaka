@@ -226,3 +226,38 @@ export function isStale(
   const ref = lastConfirmedAt ?? (typeof createdAt === "string" ? new Date(createdAt) : createdAt);
   return Date.now() - ref.getTime() > staleHours * 3600000;
 }
+
+/**
+ * Return localized report texts (title, description, publicLocationDesc, nearbyLandmark)
+ * based on the active locale ("bn" | "en").
+ */
+export function getLocalizedReportText(
+  report: {
+    title: string;
+    description: string;
+    publicLocationDesc?: string | null;
+    nearbyLandmark?: string | null;
+    titleBn?: string;
+    titleEn?: string;
+    descriptionBn?: string;
+    descriptionEn?: string;
+    publicLocationDescBn?: string;
+    publicLocationDescEn?: string;
+    nearbyLandmarkBn?: string;
+    nearbyLandmarkEn?: string;
+  },
+  locale: "bn" | "en"
+) {
+  const isEn = locale === "en";
+  return {
+    title: isEn ? (report.titleEn || report.title) : (report.titleBn || report.title),
+    description: isEn ? (report.descriptionEn || report.description) : (report.descriptionBn || report.description),
+    publicLocationDesc: isEn
+      ? (report.publicLocationDescEn || report.publicLocationDesc || "")
+      : (report.publicLocationDescBn || report.publicLocationDesc || ""),
+    nearbyLandmark: isEn
+      ? (report.nearbyLandmarkEn || report.nearbyLandmark || "")
+      : (report.nearbyLandmarkBn || report.nearbyLandmark || ""),
+  };
+}
+

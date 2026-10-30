@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ReportItem } from "@/lib/types";
 import { CategoryBadge } from "./CategoryBadge";
 import { StatusBadge } from "./StatusBadge";
-import { formatTimestamp, isStale, toBengaliNumerals } from "@/lib/constants";
+import { formatTimestamp, isStale, toBengaliNumerals, getLocalizedReportText } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
 import { MapPin, Clock, ThumbsUp, AlertTriangle, ArrowRight, Camera, CheckCircle2, Newspaper, ExternalLink } from "lucide-react";
 
@@ -17,6 +17,7 @@ interface ReportCardProps {
 export function ReportCard({ report, className = "" }: ReportCardProps) {
   const { locale, t } = useI18n();
   const timeInfo = formatTimestamp(report.createdAt, locale);
+  const localized = getLocalizedReportText(report, locale);
   const stale = isStale(
     report.lastConfirmedAt ? new Date(report.lastConfirmedAt) : null,
     report.createdAt
@@ -57,27 +58,27 @@ export function ReportCard({ report, className = "" }: ReportCardProps) {
             href={`/report/${report.id}`}
             className="hover:text-teal-700 transition focus:outline-none focus:underline"
           >
-            {report.title}
+            {localized.title}
           </Link>
         </h3>
 
         {/* Description */}
         <p className="text-gray-600 text-xs sm:text-sm line-clamp-2 mb-3 leading-relaxed">
-          {report.description}
+          {localized.description}
         </p>
 
         {/* Location & Landmark */}
-        {(report.publicLocationDesc || report.nearbyLandmark) && (
+        {(localized.publicLocationDesc || localized.nearbyLandmark) && (
           <div className="flex items-start gap-1.5 text-xs text-gray-700 mb-3 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
             <MapPin className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
             <div>
-              {report.publicLocationDesc && (
-                <span className="font-medium text-gray-900 block">{report.publicLocationDesc}</span>
+              {localized.publicLocationDesc && (
+                <span className="font-medium text-gray-900 block">{localized.publicLocationDesc}</span>
               )}
-              {report.nearbyLandmark && (
+              {localized.nearbyLandmark && (
                 <span className="text-gray-500 text-[11px] block">
                   {locale === "bn" ? "ল্যান্ডমার্ক: " : "Landmark: "}
-                  {report.nearbyLandmark}
+                  {localized.nearbyLandmark}
                 </span>
               )}
             </div>

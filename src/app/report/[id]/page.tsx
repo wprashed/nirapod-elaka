@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { VerifyModal } from "@/components/VerifyModal";
 import { UpdateModal } from "@/components/UpdateModal";
 import { AbuseModal } from "@/components/AbuseModal";
-import { formatTimestamp, isStale, toBengaliNumerals } from "@/lib/constants";
+import { formatTimestamp, isStale, toBengaliNumerals, getLocalizedReportText } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
 import {
   MapPin,
@@ -124,6 +124,7 @@ export default function ReportDetailPage() {
 
   const createdTime = formatTimestamp(report.createdAt, locale);
   const confirmedTime = formatTimestamp(report.lastConfirmedAt, locale);
+  const localized = getLocalizedReportText(report, locale);
   const stale = isStale(
     report.lastConfirmedAt ? new Date(report.lastConfirmedAt) : null,
     report.createdAt
@@ -196,10 +197,10 @@ export default function ReportDetailPage() {
         {/* Title & Description */}
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 leading-snug mb-3">
-            {report.title}
+            {localized.title}
           </h1>
           <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {report.description}
+            {localized.description}
           </p>
         </div>
 
@@ -293,15 +294,15 @@ export default function ReportDetailPage() {
             <span>{locale === "bn" ? "অবস্থান ও মানচিত্র" : "Location Preview"}</span>
           </div>
 
-          {(report.publicLocationDesc || report.nearbyLandmark) && (
+          {(localized.publicLocationDesc || localized.nearbyLandmark) && (
             <div className="p-3 bg-teal-50/50 border border-teal-100 rounded-xl text-xs space-y-0.5">
-              {report.publicLocationDesc && (
-                <div className="font-bold text-gray-900">{report.publicLocationDesc}</div>
+              {localized.publicLocationDesc && (
+                <div className="font-bold text-gray-900">{localized.publicLocationDesc}</div>
               )}
-              {report.nearbyLandmark && (
+              {localized.nearbyLandmark && (
                 <div className="text-gray-600">
                   {locale === "bn" ? "নিকটবর্তী ল্যান্ডমার্ক: " : "Landmark: "}
-                  {report.nearbyLandmark}
+                  {localized.nearbyLandmark}
                 </div>
               )}
             </div>

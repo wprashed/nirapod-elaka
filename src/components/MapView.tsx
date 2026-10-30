@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ReportItem } from "@/lib/types";
 import { CATEGORY_META } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
-import { formatTimestamp, isStale } from "@/lib/constants";
+import { formatTimestamp, isStale, getLocalizedReportText } from "@/lib/constants";
 import { StatusBadge } from "./StatusBadge";
 import { MapPin, Navigation, Compass, Layers, AlertCircle } from "lucide-react";
 
@@ -161,6 +161,7 @@ export function MapView({
 
         // Popup content with localized timestamp and client navigation
         const timeInfo = formatTimestamp(rep.createdAt, locale);
+        const localized = getLocalizedReportText(rep, locale);
         const popupHtml = `
           <div class="p-2 min-w-[220px] max-w-[280px] font-sans">
             <div class="flex items-center justify-between gap-1.5 mb-1.5">
@@ -176,10 +177,10 @@ export function MapView({
                   : ""
               }
             </div>
-            <h4 class="font-bold text-sm text-gray-900 mb-1 leading-snug">${rep.title}</h4>
+            <h4 class="font-bold text-sm text-gray-900 mb-1 leading-snug">${localized.title}</h4>
             ${
-              rep.publicLocationDesc
-                ? `<p class="text-xs text-gray-600 mb-2 flex items-center gap-1"><span class="text-teal-600 font-semibold">📍</span> ${rep.publicLocationDesc}</p>`
+              localized.publicLocationDesc
+                ? `<p class="text-xs text-gray-600 mb-2 flex items-center gap-1"><span class="text-teal-600 font-semibold">📍</span> ${localized.publicLocationDesc}</p>`
                 : ""
             }
             <div class="text-[11px] text-gray-500 mb-2">

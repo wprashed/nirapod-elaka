@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
+import { toBengaliNumerals } from "@/lib/constants";
 import {
   AlertTriangle,
   Shield,
@@ -172,7 +173,7 @@ export function Header() {
                     </span>
                     <span className="text-[10px] font-semibold text-amber-900 flex items-center gap-0.5">
                       <span>⭐</span>
-                      <span>{user.civicPoints ?? 0}</span>
+                      <span>{locale === "bn" ? toBengaliNumerals(user.civicPoints ?? 0) : (user.civicPoints ?? 0)}</span>
                       <span className="text-gray-400">·</span>
                       <span className="text-teal-700 uppercase font-bold">{user.role}</span>
                     </span>
@@ -211,7 +212,7 @@ export function Header() {
                               {locale === "bn" ? "নাগরিক সুনাম" : "Civic Reputation"}
                             </span>
                             <span className="text-xs font-black text-amber-950">
-                              {user.civicPoints ?? 0} {locale === "bn" ? "পয়েন্ট" : "pts"}
+                              {locale === "bn" ? toBengaliNumerals(user.civicPoints ?? 0) : (user.civicPoints ?? 0)} {locale === "bn" ? "পয়েন্ট" : "pts"}
                             </span>
                           </div>
                         </div>

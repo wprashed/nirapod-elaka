@@ -236,7 +236,7 @@ export function UpdateModal({
                 {locale === "bn" ? "আপডেট প্রদান করলে অর্জিত হবে:" : "Points earned for update:"}
               </span>
               <span className="font-bold text-amber-800 bg-white px-2 py-0.5 rounded-md border border-amber-200">
-                +১৫ pts
+                {locale === "bn" ? "+১৫ pts" : "+15 pts"}
               </span>
             </div>
           )}

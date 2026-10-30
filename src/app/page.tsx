@@ -48,7 +48,7 @@ const MapView = dynamic(
     ssr: false,
     loading: () => (
       <div className="w-full h-[540px] rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 animate-pulse">
-        <span>মানচিত্র লোড হচ্ছে... / Loading interactive map...</span>
+        <span className="text-xs font-medium">Loading map...</span>
       </div>
     ),
   }
@@ -124,22 +124,22 @@ export default function HomePage() {
 
   // Major Dhaka commuter corridors for 1-click filter
   const DHAKA_HOTSPOTS = [
-    { labelBn: "মিরপুর (১০ ও কাজীপাড়া)", labelEn: "Mirpur Corridor", query: "মিরপুর" },
-    { labelBn: "ধানমন্ডি ২৭", labelEn: "Dhanmondi 27", query: "ধানমন্ডি" },
-    { labelBn: "উত্তরা ও দিয়াবাড়ি", labelEn: "Uttara & Diabari", query: "উত্তরা" },
-    { labelBn: "গুলশান ২ ও বারিধারা", labelEn: "Gulshan & Baridhara", query: "গুলশান" },
-    { labelBn: "বনানী ১১ নম্বর", labelEn: "Banani 11", query: "বনানী" },
-    { labelBn: "কুড়িল ও এক্সপ্রেসওয়ে", labelEn: "Kuril & Expressway", query: "কুড়িল" },
-    { labelBn: "বসুন্ধরা গেট", labelEn: "Bashundhara Gate", query: "বসুন্ধরা" },
-    { labelBn: "মহাখালী আমতলী", labelEn: "Mohakhali Amtoli", query: "মহাখালী" },
-    { labelBn: "ফার্মগেট মোড়", labelEn: "Farmgate", query: "ফার্মগেট" },
-    { labelBn: "তেজগাঁও সাতরাস্তা", labelEn: "Tejgaon Satrasta", query: "তেজগাঁও" },
-    { labelBn: "শাহবাগ ও টিএসসি", labelEn: "Shahbagh & TSC", query: "শাহবাগ" },
-    { labelBn: "মতিঝিল শাপলা চত্বর", labelEn: "Motijheel", query: "মতিঝিল" },
-    { labelBn: "মালিবাগ ও খিলগাঁও", labelEn: "Malibagh & Khilgaon", query: "মালিবাগ" },
-    { labelBn: "সায়েদাবাদ ও যাত্রাবাড়ী", labelEn: "Sayedabad", query: "সায়েদাবাদ" },
-    { labelBn: "পুরান ঢাকা ও লালবাগ", labelEn: "Old Dhaka & Lalbagh", query: "পুরান ঢাকা" },
-    { labelBn: "গাবতলী বেড়িবাঁধ", labelEn: "Gabtoli", query: "গাবতলী" },
+    { labelBn: "মিরপুর (১০ ও কাজীপাড়া)", labelEn: "Mirpur Corridor", queryBn: "মিরপুর", queryEn: "Mirpur" },
+    { labelBn: "ধানমন্ডি ২৭", labelEn: "Dhanmondi 27", queryBn: "ধানমন্ডি", queryEn: "Dhanmondi" },
+    { labelBn: "উত্তরা ও দিয়াবাড়ি", labelEn: "Uttara & Diabari", queryBn: "উত্তরা", queryEn: "Uttara" },
+    { labelBn: "গুলশান ২ ও বারিধারা", labelEn: "Gulshan & Baridhara", queryBn: "গুলশান", queryEn: "Gulshan" },
+    { labelBn: "বনানী ১১ নম্বর", labelEn: "Banani 11", queryBn: "বনানী", queryEn: "Banani" },
+    { labelBn: "কুড়িল ও এক্সপ্রেসওয়ে", labelEn: "Kuril & Expressway", queryBn: "কুড়িল", queryEn: "Kuril" },
+    { labelBn: "বসুন্ধরা গেট", labelEn: "Bashundhara Gate", queryBn: "বসুন্ধরা", queryEn: "Bashundhara" },
+    { labelBn: "মহাখালী আমতলী", labelEn: "Mohakhali Amtoli", queryBn: "মহাখালী", queryEn: "Mohakhali" },
+    { labelBn: "ফার্মগেট মোড়", labelEn: "Farmgate", queryBn: "ফার্মগেট", queryEn: "Farmgate" },
+    { labelBn: "তেজগাঁও সাতরাস্তা", labelEn: "Tejgaon Satrasta", queryBn: "তেজগাঁও", queryEn: "Tejgaon" },
+    { labelBn: "শাহবাগ ও টিএসসি", labelEn: "Shahbagh & TSC", queryBn: "শাহবাগ", queryEn: "Shahbagh" },
+    { labelBn: "মতিঝিল শাপলা চত্বর", labelEn: "Motijheel", queryBn: "মতিঝিল", queryEn: "Motijheel" },
+    { labelBn: "মালিবাগ ও খিলগাঁও", labelEn: "Malibagh & Khilgaon", queryBn: "মালিবাগ", queryEn: "Malibagh" },
+    { labelBn: "সায়েদাবাদ ও যাত্রাবাড়ী", labelEn: "Sayedabad", queryBn: "সায়েদাবাদ", queryEn: "Sayedabad" },
+    { labelBn: "পুরান ঢাকা ও লালবাগ", labelEn: "Old Dhaka & Lalbagh", queryBn: "পুরান ঢাকা", queryEn: "Old Dhaka" },
+    { labelBn: "গাবতলী বেড়িবাঁধ", labelEn: "Gabtoli", queryBn: "গাবতলী", queryEn: "Gabtoli" },
   ];
 
   // Pagination calculation
@@ -332,16 +332,19 @@ export default function HomePage() {
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {DHAKA_HOTSPOTS.map((hotspot) => {
-            const isActive = searchQuery === hotspot.query;
+            const activeQuery = locale === "bn" ? hotspot.queryBn : hotspot.queryEn;
+            const isActive =
+              searchQuery.toLowerCase() === hotspot.queryBn.toLowerCase() ||
+              searchQuery.toLowerCase() === hotspot.queryEn.toLowerCase();
             return (
               <button
-                key={hotspot.query}
+                key={hotspot.queryEn}
                 type="button"
                 onClick={() => {
                   if (isActive) {
                     setSearchQuery("");
                   } else {
-                    setSearchQuery(hotspot.query);
+                    setSearchQuery(activeQuery);
                   }
                   setSelectedCategory("all");
                   setCurrentPage(1);
@@ -366,7 +369,7 @@ export default function HomePage() {
           {loading
             ? (locale === "bn" ? "হ্যাজার্ড তথ্য লোড হচ্ছে..." : "Loading hazards...")
             : (locale === "bn"
-                ? `${reports.length} টি হ্যাজার্ড মানচিত্রে ও তালিকায় প্রদর্শিত হচ্ছে`
+                ? `${toBengaliNumerals(reports.length)}টি হ্যাজার্ড মানচিত্রে ও তালিকায় প্রদর্শিত হচ্ছে`
                 : `${reports.length} hazards currently displayed on map and list`)}
         </div>
 
@@ -403,11 +406,14 @@ export default function HomePage() {
             className="px-3 py-2 text-xs rounded-xl border border-gray-300 bg-gray-50 text-gray-700 font-medium focus:ring-2 focus:ring-teal-500"
           >
             <option value="">{locale === "bn" ? "📍 সকল এলাকা (ঢাকা)" : "📍 All Locations (Dhaka)"}</option>
-            {DHAKA_HOTSPOTS.map((h) => (
-              <option key={h.query} value={h.query}>
-                {locale === "bn" ? h.labelBn : h.labelEn}
-              </option>
-            ))}
+            {DHAKA_HOTSPOTS.map((h) => {
+              const val = locale === "bn" ? h.queryBn : h.queryEn;
+              return (
+                <option key={h.queryEn} value={val}>
+                  {locale === "bn" ? h.labelBn : h.labelEn}
+                </option>
+              );
+            })}
           </select>
 
           {/* View Toggle */}
@@ -464,7 +470,7 @@ export default function HomePage() {
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent"
             }`}
           >
-            {locale === "bn" ? "সকল হ্যাজার্ড" : "All Hazards"} ({reports.length})
+            {locale === "bn" ? "সকল হ্যাজার্ড" : "All Hazards"} ({locale === "bn" ? toBengaliNumerals(reports.length) : reports.length})
           </button>
           {REPORT_CATEGORIES.map((cat) => {
             const meta = CATEGORY_META[cat];
@@ -536,7 +542,7 @@ export default function HomePage() {
               <h2 className="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">
                 <span>{locale === "bn" ? "সাম্প্রতিক হ্যাজার্ড রিপোর্ট" : "Recent Hazard Reports"}</span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 font-bold">
-                  {reports.length}
+                  {locale === "bn" ? toBengaliNumerals(reports.length) : reports.length}
                 </span>
               </h2>
 
@@ -551,10 +557,10 @@ export default function HomePage() {
                   className="text-[11px] py-1 px-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 font-medium"
                   title="Items per page"
                 >
-                  <option value={4}>4 / page</option>
-                  <option value={6}>6 / page</option>
-                  <option value={10}>10 / page</option>
-                  <option value={20}>20 / page</option>
+                  <option value={4}>{locale === "bn" ? "৪টি / পৃষ্ঠা" : "4 / page"}</option>
+                  <option value={6}>{locale === "bn" ? "৬টি / পৃষ্ঠা" : "6 / page"}</option>
+                  <option value={10}>{locale === "bn" ? "১০টি / পৃষ্ঠা" : "10 / page"}</option>
+                  <option value={20}>{locale === "bn" ? "২০টি / পৃষ্ঠা" : "20 / page"}</option>
                 </select>
 
                 <button
@@ -723,7 +729,7 @@ export default function HomePage() {
             </p>
           </div>
           <span className="text-xs px-3 py-1 bg-rose-50 text-rose-800 rounded-full font-bold border border-rose-200 self-start sm:self-auto">
-            ২৪/৭ টোল-ফ্রি সেবা
+            {locale === "bn" ? "২৪/৭ টোল-ফ্রি সেবা" : "24/7 Toll-Free"}
           </span>
         </div>
 
@@ -733,13 +739,17 @@ export default function HomePage() {
             className="p-3.5 bg-rose-50/70 hover:bg-rose-100/70 border border-rose-200 rounded-2xl flex flex-col justify-between transition group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-black text-rose-700">৯৯৯</span>
+              <span className="text-xl sm:text-2xl font-black text-rose-700">
+                {locale === "bn" ? "৯৯৯" : "999"}
+              </span>
               <span className="text-xs">🚨</span>
             </div>
             <div className="mt-2 text-xs font-bold text-rose-950">
               {locale === "bn" ? "জাতীয় জরুরি সেবা" : "National Emergency"}
             </div>
-            <span className="text-[10px] text-rose-800 mt-0.5 block">পুলিশ • ফায়ার • অ্যাম্বুলেন্স</span>
+            <span className="text-[10px] text-rose-800 mt-0.5 block">
+              {locale === "bn" ? "পুলিশ • ফায়ার • অ্যাম্বুলেন্স" : "Police • Fire • Ambulance"}
+            </span>
           </a>
 
           <a
@@ -747,13 +757,17 @@ export default function HomePage() {
             className="p-3.5 bg-blue-50/70 hover:bg-blue-100/70 border border-blue-200 rounded-2xl flex flex-col justify-between transition group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-black text-blue-700">১৬১৬২</span>
+              <span className="text-xl sm:text-2xl font-black text-blue-700">
+                {locale === "bn" ? "১৬১৬২" : "16162"}
+              </span>
               <span className="text-xs">💧</span>
             </div>
             <div className="mt-2 text-xs font-bold text-blue-950">
               {locale === "bn" ? "ঢাকা ওয়াসা" : "Dhaka WASA"}
             </div>
-            <span className="text-[10px] text-blue-800 mt-0.5 block">পানি নিষ্কাশন ও জলাবদ্ধতা</span>
+            <span className="text-[10px] text-blue-800 mt-0.5 block">
+              {locale === "bn" ? "পানি নিষ্কাশন ও জলাবদ্ধতা" : "Drainage & Waterlogging"}
+            </span>
           </a>
 
           <a
@@ -761,13 +775,17 @@ export default function HomePage() {
             className="p-3.5 bg-purple-50/70 hover:bg-purple-100/70 border border-purple-200 rounded-2xl flex flex-col justify-between transition group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-black text-purple-700">১৬৫৭৫</span>
+              <span className="text-xl sm:text-2xl font-black text-purple-700">
+                {locale === "bn" ? "১৬৫৭৫" : "16575"}
+              </span>
               <span className="text-xs">⚡</span>
             </div>
             <div className="mt-2 text-xs font-bold text-purple-950">
               {locale === "bn" ? "তিতাস গ্যাস" : "Titas Gas Emergency"}
             </div>
-            <span className="text-[10px] text-purple-800 mt-0.5 block">গ্যাস লিকেজ ও দুর্ঘটনা</span>
+            <span className="text-[10px] text-purple-800 mt-0.5 block">
+              {locale === "bn" ? "গ্যাস লিকেজ ও দুর্ঘটনা" : "Gas Leak & Emergencies"}
+            </span>
           </a>
 
           <a
@@ -775,13 +793,17 @@ export default function HomePage() {
             className="p-3.5 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200 rounded-2xl flex flex-col justify-between transition group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-black text-amber-800">১৬১১৬</span>
+              <span className="text-xl sm:text-2xl font-black text-amber-800">
+                {locale === "bn" ? "১৬১১৬" : "16116"}
+              </span>
               <span className="text-xs">🔌</span>
             </div>
             <div className="mt-2 text-xs font-bold text-amber-950">
               {locale === "bn" ? "ডিপিডিসি / ডেসকো" : "Power Grid Call Center"}
             </div>
-            <span className="text-[10px] text-amber-800 mt-0.5 block">বিদ্যুৎ তার বা ট্রান্সফরমার</span>
+            <span className="text-[10px] text-amber-800 mt-0.5 block">
+              {locale === "bn" ? "বিদ্যুৎ তার বা ট্রান্সফরমার" : "Power Grid & Cable Hazards"}
+            </span>
           </a>
 
           <a
@@ -789,13 +811,17 @@ export default function HomePage() {
             className="p-3.5 bg-teal-50/70 hover:bg-teal-100/70 border border-teal-200 rounded-2xl flex flex-col justify-between transition group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-black text-teal-700">১০৯</span>
+              <span className="text-xl sm:text-2xl font-black text-teal-700">
+                {locale === "bn" ? "১০৯" : "109"}
+              </span>
               <span className="text-xs">🛡️</span>
             </div>
             <div className="mt-2 text-xs font-bold text-teal-950">
               {locale === "bn" ? "নারী ও শিশু হেল্প" : "Child & Women Safety"}
             </div>
-            <span className="text-[10px] text-teal-800 mt-0.5 block">আইনি সহায়তা ও নিরাপত্তা</span>
+            <span className="text-[10px] text-teal-800 mt-0.5 block">
+              {locale === "bn" ? "আইনি সহায়তা ও নিরাপত্তা" : "Helpline & Protection"}
+            </span>
           </a>
 
           <a
@@ -803,13 +829,17 @@ export default function HomePage() {
             className="p-3.5 bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200 rounded-2xl flex flex-col justify-between transition group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-black text-emerald-700">১৯৯</span>
+              <span className="text-xl sm:text-2xl font-black text-emerald-700">
+                {locale === "bn" ? "১৯৯" : "199"}
+              </span>
               <span className="text-xs">🚑</span>
             </div>
             <div className="mt-2 text-xs font-bold text-emerald-950">
               {locale === "bn" ? "স্বাস্থ্য বাতায়ন" : "National Health Desk"}
             </div>
-            <span className="text-[10px] text-emerald-800 mt-0.5 block">জরুরি চিকিৎসা পরামর্শ</span>
+            <span className="text-[10px] text-emerald-800 mt-0.5 block">
+              {locale === "bn" ? "জরুরি চিকিৎসা পরামর্শ" : "Tele-Health Consultation"}
+            </span>
           </a>
         </div>
       </div>
@@ -833,7 +863,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-3">
             <div className="w-10 h-10 rounded-xl bg-teal-600 text-white font-black flex items-center justify-center text-lg shadow-sm">
-              ১
+              {locale === "bn" ? "১" : "1"}
             </div>
             <h3 className="font-bold text-gray-900 text-base">
               {locale === "bn" ? "শনাক্ত ও পিন করুন" : "1. Spot & Pin"}
@@ -847,7 +877,7 @@ export default function HomePage() {
 
           <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-3">
             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-black flex items-center justify-center text-lg shadow-sm">
-              ২
+              {locale === "bn" ? "২" : "2"}
             </div>
             <h3 className="font-bold text-gray-900 text-base">
               {locale === "bn" ? "কমিউনিটি যাচাইকরণ" : "2. Community Verify"}
@@ -861,7 +891,7 @@ export default function HomePage() {
 
           <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center text-lg shadow-sm">
-              ৩
+              {locale === "bn" ? "৩" : "3"}
             </div>
             <h3 className="font-bold text-gray-900 text-base">
               {locale === "bn" ? "অন্যদের নিরাপদ রাখুন" : "3. Protect Neighbors"}

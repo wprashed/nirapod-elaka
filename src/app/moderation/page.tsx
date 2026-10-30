@@ -182,7 +182,9 @@ export default function ModerationPage() {
     return (
       <div className="py-20 text-center space-y-3">
         <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs text-gray-500 font-medium">যাচাই হচ্ছে... / Verifying moderation credentials...</p>
+        <p className="text-xs text-gray-500 font-medium">
+          {locale === "bn" ? "যাচাই হচ্ছে..." : "Verifying moderation credentials..."}
+        </p>
       </div>
     );
   }

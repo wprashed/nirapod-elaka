@@ -189,12 +189,22 @@ class NirapodDataStore {
         (r) =>
           r.title.toLowerCase().includes(q) ||
           r.description.toLowerCase().includes(q) ||
+          (r.titleEn && r.titleEn.toLowerCase().includes(q)) ||
+          (r.descriptionEn && r.descriptionEn.toLowerCase().includes(q)) ||
+          (r.titleBn && r.titleBn.toLowerCase().includes(q)) ||
+          (r.descriptionBn && r.descriptionBn.toLowerCase().includes(q)) ||
           (r.publicLocationDesc && r.publicLocationDesc.toLowerCase().includes(q)) ||
+          (r.publicLocationDescEn && r.publicLocationDescEn.toLowerCase().includes(q)) ||
+          (r.publicLocationDescBn && r.publicLocationDescBn.toLowerCase().includes(q)) ||
           (r.nearbyLandmark && r.nearbyLandmark.toLowerCase().includes(q)) ||
+          (r.nearbyLandmarkEn && r.nearbyLandmarkEn.toLowerCase().includes(q)) ||
+          (r.nearbyLandmarkBn && r.nearbyLandmarkBn.toLowerCase().includes(q)) ||
           (alias && (
             r.title.toLowerCase().includes(alias) ||
             r.description.toLowerCase().includes(alias) ||
-            (r.publicLocationDesc && r.publicLocationDesc.toLowerCase().includes(alias))
+            (r.titleEn && r.titleEn.toLowerCase().includes(alias)) ||
+            (r.publicLocationDesc && r.publicLocationDesc.toLowerCase().includes(alias)) ||
+            (r.publicLocationDescEn && r.publicLocationDescEn.toLowerCase().includes(alias))
           ))
       );
     }

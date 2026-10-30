@@ -1,7 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { createReportSchema, verificationSchema, createUpdateSchema, abuseReportSchema } from "@/lib/validation";
+import { createReportSchema, verificationSchema, createUpdateSchema, abuseReportSchema, reportsQuerySchema } from "@/lib/validation";
 
 describe("Input Validation & Civic Guardrails", () => {
+  it("validates query parameters with status=active", () => {
+    const query = { status: "active", page: "1", limit: "20" };
+    const res = reportsQuerySchema.safeParse(query);
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.data.status).toBe("active");
+    }
+  });
   it("validates a compliant hazard report", () => {
     const valid = {
       title: "Waterlogging at Dhanmondi 27",

@@ -124,7 +124,7 @@ class NirapodDataStore {
     lng?: number;
     radiusKm?: number;
     category?: ReportCategory;
-    status?: ReportStatus;
+    status?: ReportStatus | "active";
     sort?: "newest" | "nearest" | "recently_confirmed" | "unresolved";
     search?: string;
     reporterId?: string;

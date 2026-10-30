@@ -28,6 +28,13 @@ export const REPORT_STATUSES = [
 
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 
+export const QUERY_STATUSES = [
+  ...REPORT_STATUSES,
+  "active",
+] as const;
+
+export type QueryStatus = (typeof QUERY_STATUSES)[number];
+
 // ─── Report creation ──────────────────────────────────────────────────────────
 
 export const createReportSchema = z.object({
@@ -108,7 +115,7 @@ export const reportsQuerySchema = z.object({
   lng: z.coerce.number().min(-180).max(180).optional(),
   radiusKm: z.coerce.number().min(0.1).max(50).default(5),
   category: z.enum(REPORT_CATEGORIES).optional(),
-  status: z.enum(REPORT_STATUSES).optional(),
+  status: z.enum(QUERY_STATUSES).optional(),
   sort: z.enum(["newest", "nearest", "recently_confirmed", "unresolved"]).default("newest"),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
